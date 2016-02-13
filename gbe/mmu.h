@@ -6,59 +6,49 @@ class MMU
 {
 public:
 	MMU();
+    ~MMU();
+
+	static const int RamSize = 1024 * 8;
+	static const int VRamSize = 1024 * 8;
+	static const int BootableRomSize = 256;
 
     inline void WriteU8(u16 _virtAdd, u8 _value)
     {
-        u8 *memory;
-        u16 physAddr;
-
-        VirtAddrToPhysAddr(_virtAdd, memory, physAddr);
-
-        memory[physAddr] = _value;
+        *VirtAddrToPhysAddr(_virtAdd) = _value;
     }
 
-    inline u8 ReadU8(u16 _virtAdd)
+    inline u8 ReadU8(u16 _virtAdd) const
     {
-        u8 *memory;
-        u16 physAddr;
-
-        VirtAddrToPhysAddr(_virtAdd, memory, physAddr);
-
-        return memory[physAddr];
+        return *VirtAddrToPhysAddr(_virtAdd);
     }
 
     inline void WriteU16(u16 _virtAdd, u16 _value)
     {
-        u8 *memory;
-        u16 physAddr;
-
-        VirtAddrToPhysAddr(_virtAdd, memory, physAddr);
-
-        memory[physAddr] = _value & 0x00FF;
-        memory[physAddr + 1] = (_value >> 8) & 0x00FF;
+        (*(u16*)VirtAddrToPhysAddr(_virtAdd)) = _value;
     }
 
-    inline u16 ReadU16(u16 _virtAdd)
+    inline u16 ReadU16(u16 _virtAdd) const
     {
-        u8 *memory;
-        u16 physAddr;
-
-        VirtAddrToPhysAddr(_virtAdd, memory, physAddr);
-
-        return (memory[physAddr + 1] << 8) | memory[physAddr];
+        return *(u16*)VirtAddrToPhysAddr(_virtAdd);
     }
+
+	const u8* GetBootableRom() const {return mBootableRom;}
+    const u8* GetRom() const {return mRom;}
 
 	bool LoadRoms   (const string& _bootableRom, const string& _cartridge);
 
+	int GetRomSize() const {return mRomSize;}
+
 private:
 
-    void VirtAddrToPhysAddr   (u16 _virtAddr, u8*& _memory, u16& _physAddr);
+    u8* VirtAddrToPhysAddr   (u16 _virtAddr) const;
 
-	u8 mRam[S8Kb];
-	u8 mVRam[S8Kb];
-	u8 mBootableRom[256];
-	u8 *mRom;
-    bool mBootableromEnabled = true;
+	u8 mRam[RamSize];
+	u8 mVRam[VRamSize];
+	u8 mBootableRom[BootableRomSize];
+	u8 *mRom {nullptr};
+	int mRomSize{0};
+    bool mBootableromEnabled {true};
 };
 
 #endif

@@ -8,6 +8,20 @@
 //--------------------------------------------
 MMU::MMU()
 {
+    fill_n(mRam, RamSize, 0);
+    fill_n(mVRam, VRamSize, 0);
+    fill_n(mBootableRom, BootableRomSize, 0);
+}
+
+//--------------------------------------------
+// --
+//--------------------------------------------
+MMU::~MMU()
+{
+    if (mRom != nullptr)
+    {
+        delete[] mRom;
+    }
 }
 
 //--------------------------------------------
@@ -15,11 +29,20 @@ MMU::MMU()
 //--------------------------------------------
 bool MMU::LoadRoms(const string &_bootableRom, const string &_cartridge)
 {
-    std::ifstream bootable(_bootableRom, std::ios::binary);
-
+    ifstream bootable(_bootableRom, ios::binary);
     bootable.read((char*)mBootableRom, 256);
-
     bootable.close();
+
+    // ...
+    ifstream cartridge(_cartridge, ios::binary);
+
+    cartridge.seekg(0, cartridge.end);
+	mRomSize = (int)cartridge.tellg();
+    cartridge.seekg(0, cartridge.beg);
+
+    mRom = new u8[mRomSize];
+    cartridge.read((char*)mRom, mRomSize);
+    cartridge.close();
 
 	return true;
 }
@@ -27,35 +50,27 @@ bool MMU::LoadRoms(const string &_bootableRom, const string &_cartridge)
 //--------------------------------------------
 // --
 //--------------------------------------------
-void MMU::VirtAddrToPhysAddr(u16 _virtAddr, u8 *&_memory, u16 &_physAddr)
+u8* MMU::VirtAddrToPhysAddr(u16 _virtAddr) const
 {
-    if (mBootableromEnabled && (_virtAddr >= 0x000) && (_virtAddr <= 0x0100))
+    if (mBootableromEnabled && (_virtAddr >= 0x000) && (_virtAddr <= 0x00FF))
     {
-        _memory = &mBootableRom[0];
-        _physAddr = _virtAddr;
-        return;
+        return (u8*)&mBootableRom[_virtAddr];
     }
 
     if ((_virtAddr >= 0x000) && (_virtAddr <= 0x3FFF))
     {
-        _memory = mRom;
-        _physAddr = _virtAddr;
-        return;
+        return &mRom[_virtAddr];
     }
 
     if ((_virtAddr >= 0x8000) && (_virtAddr <= 0x9FFF))
     {
-        _memory = &mVRam[0];
-        _physAddr = _virtAddr - 0x8000;
-        return;
+        return (u8*)&mVRam[_virtAddr - 0x8000];
     }
 
     if ((_virtAddr >= 0xC000) && (_virtAddr <= 0xDFFF))
     {
-        _memory = &mRam[0];
-        _physAddr = _virtAddr - 0xC000;
-        return;
+        return (u8*)&mRam[_virtAddr - 0xC000];
     }
 
-    throw std::runtime_error("memory address unknown: " + _virtAddr);
+    throw runtime_error("memory address unknown: " + Int2Hex(_virtAddr));
 }

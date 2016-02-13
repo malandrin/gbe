@@ -18,7 +18,7 @@ void GB::PowerUp(const string &_bootableRom, const string &_cartridge)
             mCpu.Step();
         }
     }
-    catch(std::runtime_error &e)
+    catch(runtime_error &e)
     {
         cout << e.what() << '\n';
     }

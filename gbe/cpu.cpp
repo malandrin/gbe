@@ -14,11 +14,11 @@ void CPU::Step()
         case 0x31: // LD SP, nn
             mRegSP = mMmu->ReadU16(mRegPC);
 			mRegPC += 2;
-            cout << "LD SP, " << mRegSP << "\n";
+            cout << "LD SP, " << Int2Hex(mRegSP) << "\n";
             break;
 
         default:
-            throw std::runtime_error("opcode unknown: " + opcode);
+            throw runtime_error("opcode unknown: " + Int2Hex(opcode));
             break;
     }
 }

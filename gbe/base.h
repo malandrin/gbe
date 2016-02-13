@@ -11,6 +11,6 @@ typedef char i8;
 typedef unsigned short u16;
 typedef short i16;
 
-#define S8Kb (1024 * 8)
+string Int2Hex(int _value);
 
 #endif

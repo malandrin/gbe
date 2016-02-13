@@ -2,11 +2,14 @@
 #ifndef _GB_H
 #define _GB_H
 
+#include "mmu.h"
+#include "cpu.h"
+
 class GB
 {
 public:
-    void    PowerUp    (const string& _bootableRom, const string& _cartridge);
-
+    void        PowerUp    (const string& _bootableRom, const string& _cartridge);
+    const MMU&  GetMmu     () const { return mMmu; }
 
 private:
 	MMU mMmu;
