@@ -8,6 +8,7 @@
 class GB
 {
 public:
+    GB() : mCpu(mMmu) {}
     void        PowerUp    (const string& _bootableRom, const string& _cartridge);
     const MMU&  GetMmu     () const { return mMmu; }
 

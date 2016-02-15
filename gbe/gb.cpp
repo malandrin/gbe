@@ -11,7 +11,6 @@ void GB::PowerUp(const string &_bootableRom, const string &_cartridge)
     try
     {
         mMmu.LoadRoms(_bootableRom, _cartridge);
-        mCpu.SetMmu(&mMmu);
 
         while(true)
         {

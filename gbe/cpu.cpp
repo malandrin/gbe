@@ -7,12 +7,12 @@
 //--------------------------------------------
 void CPU::Step()
 {
-    u8 opcode = mMmu->ReadU8(mRegPC++);
+    u8 opcode = mMmu.ReadU8(mRegPC++);
 
     switch(opcode)
     {
         case 0x31: // LD SP, nn
-            mRegSP = mMmu->ReadU16(mRegPC);
+            mRegSP = mMmu.ReadU16(mRegPC);
 			mRegPC += 2;
             cout << "LD SP, " << Int2Hex(mRegSP) << "\n";
             break;

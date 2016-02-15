@@ -34,6 +34,8 @@ public:
 
 	const u8* GetBootableRom() const {return mBootableRom;}
     const u8* GetRom() const {return mRom;}
+	const u8* GetRam() const {return mRam;}
+	const u8* GetVRam() const { return mVRam; }
 
 	bool LoadRoms   (const string& _bootableRom, const string& _cartridge);
 

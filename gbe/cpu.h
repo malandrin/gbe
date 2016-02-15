@@ -7,11 +7,12 @@ class MMU;
 class CPU
 {
 public:
-	void SetMmu(MMU *_mmu) { mMmu = _mmu; }
+	CPU(MMU &_mmu) : mMmu(_mmu) {}
+
 	void Step();
 
 private:
-	MMU *mMmu {nullptr};
+	MMU &mMmu;
 
 	u8   mRegA {0};
 	u8   mRegB {0};
