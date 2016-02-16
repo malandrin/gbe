@@ -9,7 +9,7 @@
 MMU::MMU()
 {
     fill_n(mRam, RamSize, 0);
-    fill_n(mVRam, VRamSize, 0);
+    fill_n(mVRam, VRamSize, 255);
     fill_n(mBootableRom, BootableRomSize, 0);
 }
 
@@ -52,7 +52,7 @@ bool MMU::LoadRoms(const string &_bootableRom, const string &_cartridge)
 //--------------------------------------------
 u8* MMU::VirtAddrToPhysAddr(u16 _virtAddr) const
 {
-    if (mBootableromEnabled && (_virtAddr >= 0x000) && (_virtAddr <= 0x00FF))
+    if (mBootableRomEnabled && (_virtAddr >= 0x000) && (_virtAddr <= 0x00FF))
     {
         return (u8*)&mBootableRom[_virtAddr];
     }

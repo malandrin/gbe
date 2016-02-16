@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include "base.h"
 #include "gb.h"
-#include "memory_viewer.h"
 #include "debugger.h"
 
 int main(int argn, char *argv[])

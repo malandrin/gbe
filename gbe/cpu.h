@@ -28,6 +28,17 @@ private:
 	bool mFlagN {false};
 	bool mFlagH {false};
 	bool mFlagC {false};
+
+	inline u16 U8sToU16(u8 _l, u8 _h)
+	{
+		return (_h << 8) | _l;
+	}
+
+	inline void U16ToU8s(u16 _val, u8 &_l, u8 &_h)
+	{
+		_h = _val >> 8;
+		_l = _val & 0x00FF;
+	}
 };
 
 #endif

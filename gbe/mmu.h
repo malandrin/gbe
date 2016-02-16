@@ -39,7 +39,10 @@ public:
 
 	bool LoadRoms   (const string& _bootableRom, const string& _cartridge);
 
-	int GetRomSize() const {return mRomSize;}
+	int  GetRomSize () const {return mRomSize;}
+
+    bool IsInBootableRom     () const {return mBootableRomEnabled;}
+    void DisableBootableRom  () {mBootableRomEnabled = false;}
 
 private:
 
@@ -50,7 +53,7 @@ private:
 	u8 mBootableRom[BootableRomSize];
 	u8 *mRom {nullptr};
 	int mRomSize{0};
-    bool mBootableromEnabled {true};
+    bool mBootableRomEnabled {true};
 };
 
 #endif

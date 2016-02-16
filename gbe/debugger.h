@@ -2,6 +2,9 @@
 #ifndef _DEBUGGER_H
 #define _DEBUGGER_H
 
+#include "memory_viewer.h"
+#include "instructions_viewer.h"
+
 class GB;
 
 class Debugger
@@ -14,9 +17,10 @@ public:
 	void Render();
 
 private:
-	SDL_Window *mWindow;
-	SDL_GLContext mContext;
-	MemoryViewer mMemoryViewer;
+	SDL_Window         *mWindow;
+	SDL_GLContext      mContext;
+	MemoryViewer       mMemoryViewer;
+    InstructionsViewer mInstructionsViewer;
 };
 
 #endif

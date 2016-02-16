@@ -11,7 +11,7 @@
 //--------------------------------------------
 MemoryViewer::MemoryViewer(const MMU &_mmu) : mMmu(_mmu)
 {
-	CalculateMemInfo(true);
+	CalculateMemInfo();
 }
 
 //--------------------------------------------
@@ -20,7 +20,8 @@ MemoryViewer::MemoryViewer(const MMU &_mmu) : mMmu(_mmu)
 void MemoryViewer::Render()
 {
 	ImGui::SetNextWindowPos(ImVec2(0, 468));
-	if (ImGui::Begin("Memory Viewer", nullptr, ImVec2(1024, 300), 1.0f, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings))
+
+	if (ImGui::Begin("Memory", nullptr, ImVec2(1024, 300), 1.0f, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings))
 	{
 		float glyphWidth = ImGui::CalcTextSize("F").x;
 		float cellWidth = glyphWidth * 3;
@@ -35,8 +36,8 @@ void MemoryViewer::Render()
 
 		for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
 		{
-			int memIdx = 0;
-			MemInfo *memInfo = GetMemInfoByLine(i, memIdx);
+			int memIdx = GetMemInfoByLine(i);
+			MemInfo *memInfo = &mMemInfo[memIdx];
 
 			if (memIdx % 2 == 0)
 				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
@@ -57,8 +58,8 @@ void MemoryViewer::Render()
 
 			ImGui::SameLine(lineStartX + cellWidth * mNumCols + glyphWidth * 2);
 
-			ImVec2 screen_pos = ImGui::GetCursorScreenPos();
-			ImGui::GetWindowDrawList()->AddLine(ImVec2(screen_pos.x - glyphWidth, screen_pos.y), ImVec2(screen_pos.x - glyphWidth, screen_pos.y + lineHeight), ImColor(ImGui::GetStyle().Colors[ImGuiCol_Border]));
+			ImVec2 screenPos = ImGui::GetCursorScreenPos();
+			ImGui::GetWindowDrawList()->AddLine(ImVec2(screenPos.x - glyphWidth, screenPos.y), ImVec2(screenPos.x - glyphWidth, screenPos.y + lineHeight), ImColor(ImGui::GetStyle().Colors[ImGuiCol_Border]));
 
 			addr = memInfo->baseAddr + ((i - memInfo->lineStart) * mNumCols);
 			for (int n = 0; n < mNumCols && addr < mMemSize; n++, addr++)
@@ -73,7 +74,6 @@ void MemoryViewer::Render()
 
 		clipper.End();
 		ImGui::PopStyleVar(2);
-
 		ImGui::EndChild();
 	}
 
@@ -84,10 +84,10 @@ void MemoryViewer::Render()
 //--------------------------------------------
 // --
 //--------------------------------------------
-void MemoryViewer::CalculateMemInfo(bool _useBootable)
+void MemoryViewer::CalculateMemInfo()
 {
-	// Bootable rom/rom
-	if (_useBootable)
+	// Bootable rom / cartridge rom
+	if (mMmu.IsInBootableRom())
 		mMemInfo[0].Set(mMmu.GetBootableRom(), MMU::BootableRomSize, 0, 0, string("BROM"));
 	else
 		mMemInfo[0].Set(mMmu.GetRom(), mMmu.GetRomSize(), 0, 0, string(" ROM"));

@@ -42,20 +42,17 @@ private:
     int     mLineTotalCount {0};
 	int     mMemSize{0};
 
-    void    CalculateMemInfo  (bool _useBootable);
+    void    CalculateMemInfo  ();
 
-    inline MemInfo *GetMemInfoByLine (int _line, int& _idx)
+    inline int GetMemInfoByLine (int _line)
     {
 		for (int i = 0; i < mNumMemInfo; ++i)
 		{
 			if ((_line >= mMemInfo[i].lineStart) && (_line < mMemInfo[i].lineEnd))
-			{
-				_idx = i;
-				return &mMemInfo[i];
-			}
+				return i;
         }
 
-        return nullptr;
+        return -1;
     }
 };
 

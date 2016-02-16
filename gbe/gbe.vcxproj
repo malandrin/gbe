@@ -156,6 +156,7 @@
     <ClCompile Include="cpu.cpp" />
     <ClCompile Include="debugger.cpp" />
     <ClCompile Include="gb.cpp" />
+    <ClCompile Include="instructions_viewer.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="memory_viewer.cpp" />
     <ClCompile Include="mmu.cpp" />
@@ -166,6 +167,7 @@
     <ClInclude Include="cpu.h" />
     <ClInclude Include="debugger.h" />
     <ClInclude Include="gb.h" />
+    <ClInclude Include="instructions_viewer.h" />
     <ClInclude Include="memory_viewer.h" />
     <ClInclude Include="mmu.h" />
   </ItemGroup>
