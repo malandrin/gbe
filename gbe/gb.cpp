@@ -11,11 +11,6 @@ void GB::PowerUp(const string &_bootableRom, const string &_cartridge)
     try
     {
         mMmu.LoadRoms(_bootableRom, _cartridge);
-
-        while(true)
-        {
-            mCpu.Step();
-        }
     }
     catch(runtime_error &e)
     {

@@ -11,6 +11,7 @@ public:
     GB() : mCpu(mMmu) {}
     void        PowerUp    (const string& _bootableRom, const string& _cartridge);
     const MMU&  GetMmu     () const { return mMmu; }
+    CPU&        GetCpu     () { return mCpu; }
 
 private:
 	MMU mMmu;

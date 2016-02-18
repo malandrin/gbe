@@ -4,6 +4,7 @@
 
 #include "memory_viewer.h"
 #include "instructions_viewer.h"
+#include "registers_viewer.h"
 
 class GB;
 
@@ -21,6 +22,7 @@ private:
 	SDL_GLContext      mContext;
 	MemoryViewer       mMemoryViewer;
     InstructionsViewer mInstructionsViewer;
+    RegistersViewer    mRegistersViewer;
 };
 
 #endif

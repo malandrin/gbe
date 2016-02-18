@@ -160,16 +160,19 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="memory_viewer.cpp" />
     <ClCompile Include="mmu.cpp" />
+    <ClCompile Include="registers_viewer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\3rdparty\imgui\imgui.h" />
     <ClInclude Include="base.h" />
     <ClInclude Include="cpu.h" />
+    <ClInclude Include="cpu_listener.h" />
     <ClInclude Include="debugger.h" />
     <ClInclude Include="gb.h" />
     <ClInclude Include="instructions_viewer.h" />
     <ClInclude Include="memory_viewer.h" />
     <ClInclude Include="mmu.h" />
+    <ClInclude Include="registers_viewer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
