@@ -17,8 +17,8 @@ public:
 	u8  GetRegC  () const { return mRegC; }
 	u8  GetRegD  () const { return mRegD; }
 	u8  GetRegE  () const { return mRegE; }
-	u8  GetRegH  () const { return mRegH; }
-	u8  GetRegL  () const { return mRegL; }
+	u8  GetRegH  () const { return mRegHL.h; }
+	u8  GetRegL  () const { return mRegHL.l; }
 	u16 GetRegSP () const { return mRegSP; }
 	u16 GetRegPC () const { return mRegPC; }
 
@@ -27,18 +27,31 @@ public:
 	bool GetFlagH () const { return mFlagH; }
 	bool GetFlagC () const { return mFlagC; }
 
+	bool IsOnDebugMode () const { return mOnDebugMode; }
+	void Break		   () { mOnDebugMode = true; }
+	void Continue	   () { mOnDebugMode = false; }
+
 	void AddListener (ICpuListener *_listener);
 
 private:
 	MMU &mMmu;
+
+	union RegHL
+	{
+		u16 hl{ 0 };
+		struct
+		{
+			u8 l;
+			u8 h;
+		};
+	};
 
 	u8   mRegA {0};
 	u8   mRegB {0};
 	u8   mRegC {0};
 	u8   mRegD {0};
 	u8   mRegE {0};
-	u8   mRegH {0};
-	u8   mRegL {0};
+	RegHL mRegHL;
 	u16  mRegSP {0};
 	u16  mRegPC {0};
 
@@ -47,20 +60,11 @@ private:
 	bool mFlagH {false};
 	bool mFlagC {false};
 
+	bool mOnDebugMode{false};
+
 	vector<ICpuListener*> mListeners;
 
 	void ProcessCb(u8 _opcode);
-
-	inline u16 U8sToU16(u8 _l, u8 _h)
-	{
-		return (_h << 8) | _l;
-	}
-
-	inline void U16ToU8s(u16 _val, u8 &_l, u8 &_h)
-	{
-		_h = _val >> 8;
-		_l = _val & 0x00FF;
-	}
 };
 
 #endif

@@ -32,6 +32,9 @@ Debugger::~Debugger()
 //--------------------------------------------
 void Debugger::HandleEvent(SDL_Event& _event)
 {
+	if (_event.window.windowID != SDL_GetWindowID(mWindow))
+		return;
+
 	ImGui_ImplSdl_ProcessEvent(&_event);
 }
 

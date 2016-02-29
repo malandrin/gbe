@@ -21,6 +21,9 @@ void InstructionsViewer::OnStep()
 {
     u16 pc = mCpu.GetRegPC();
     mActiveLineIdx = mMapAddr2Line[pc];
+
+    if (mBreakpoints.find(mActiveLineIdx) != mBreakpoints.end())
+        mCpu.Break();
 }
 
 //--------------------------------------------
@@ -122,10 +125,20 @@ void InstructionsViewer::Render()
         // debug buttons
         ImGui::Separator();
 
-		if (ImGui::Button("Step"))
-		{
-			mCpu.Step();
-		}
+        if (mCpu.IsOnDebugMode())
+        {
+    		if (ImGui::Button("Step"))
+    			mCpu.Step();
+
+            ImGui::SameLine();
+            if (ImGui::Button("Continue"))
+                mCpu.Continue();
+        }
+        else
+        {
+            if (ImGui::Button("Break"))
+                mCpu.Break();
+        }
     }
 
     ImGui::End();

@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include "base.h"
 #include "gb.h"
+#include "machine.h"
 #include "debugger.h"
 
 int main(int argn, char *argv[])
@@ -13,10 +14,6 @@ int main(int argn, char *argv[])
 		cout << "Syntax: gbe.exe bootable_rom rom [-debugger]";
 		return -1;
 	}
-
-	// ...
-	GB gb;
-	gb.PowerUp(argv[1], argv[2]);
 
 	// ...
 	if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
@@ -31,7 +28,20 @@ int main(int argn, char *argv[])
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 
-	Debugger debugger(gb);
+	// ...
+	GB gb;
+	gb.PowerUp(argv[1], argv[2]);
+
+	Machine machine(gb);
+	Debugger *debugger {nullptr};
+
+	if ((argn > 3) && (string(argv[3]) == "-debugger"))
+	{
+		debugger = new Debugger(gb);
+		gb.GetCpu().Break();
+	}
+
+	// ...
 	SDL_Event event;
 	bool done = false;
 
@@ -39,15 +49,25 @@ int main(int argn, char *argv[])
 	{
 		while(SDL_PollEvent(&event))
 		{
-			// TODO: comprobar para que ventana es el evento
-			debugger.HandleEvent(event);
-
 			if (event.type == SDL_QUIT)
 				done = true;
+			else
+			{
+				if (debugger != nullptr)
+					debugger->HandleEvent(event);
+
+				machine.HandleEvent(event);
+			}
 		}
 
-		debugger.Render();
+		machine.Update();
+
+		if (debugger != nullptr)
+			debugger->Render();
 	}
+
+	if (debugger != nullptr)
+		delete debugger;
 
 	SDL_Quit();
 

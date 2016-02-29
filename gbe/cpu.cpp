@@ -30,8 +30,8 @@ void CPU::Step()
         break;
 
         case 0x21: // LD HL, nn
-			mRegL = mMmu.ReadU8(mRegPC++);
-            mRegH = mMmu.ReadU8(mRegPC++);
+			mRegHL.hl = mMmu.ReadU16(mRegPC);
+			mRegPC += 2;
             break;
 
         case 0x31: // LD SP, nn
@@ -40,12 +40,8 @@ void CPU::Step()
             break;
 
         case 0x32: // LD (HL-), A
-        {
-            u16 aux = U8sToU16(mRegL, mRegH);
-            mMmu.WriteU8(aux--, mRegA);
-            U16ToU8s(aux, mRegL, mRegH);
-        }
-        break;
+			mMmu.WriteU8(mRegHL.hl--, mRegA);
+	        break;
 
         case 0xAF: // XOR A
             mRegA = 0;
@@ -77,7 +73,7 @@ void CPU::ProcessCb(u8 _opcode)
     switch(_opcode)
     {
         case 0x7C: // BIT 7, H
-            if ((mRegH & 0b10000000) != 0)
+            if ((mRegHL.h & 0b10000000) != 0)
                 mFlagZ = false;
             else
                 mFlagZ = true;

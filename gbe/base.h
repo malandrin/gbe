@@ -7,6 +7,7 @@
 #include <vector>
 #include <unordered_set>
 #include <map>
+#include <memory>
 
 using namespace std;
 
