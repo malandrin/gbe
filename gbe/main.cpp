@@ -33,11 +33,11 @@ int main(int argn, char *argv[])
 	gb.PowerUp(argv[1], argv[2]);
 
 	Machine machine(gb);
-	Debugger *debugger {nullptr};
+	unique_ptr<Debugger> debugger {nullptr};
 
 	if ((argn > 3) && (string(argv[3]) == "-debugger"))
 	{
-		debugger = new Debugger(gb);
+		debugger = unique_ptr<Debugger>(new Debugger(gb));
 		gb.GetCpu().Break();
 	}
 
@@ -49,7 +49,7 @@ int main(int argn, char *argv[])
 	{
 		while(SDL_PollEvent(&event))
 		{
-			if (event.type == SDL_QUIT)
+			if ((((event.type == SDL_WINDOWEVENT) && (event.window.event == SDL_WINDOWEVENT_CLOSE))) || (event.type == SDL_QUIT))
 				done = true;
 			else
 			{
@@ -62,12 +62,9 @@ int main(int argn, char *argv[])
 
 		machine.Update();
 
-		if (debugger != nullptr)
+		if ((debugger != nullptr) && gb.GetCpu().IsOnDebugMode())
 			debugger->Render();
 	}
-
-	if (debugger != nullptr)
-		delete debugger;
 
 	SDL_Quit();
 
