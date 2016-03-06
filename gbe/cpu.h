@@ -15,8 +15,10 @@ public:
 	u8  GetRegA  () const { return mRegA; }
 	u8  GetRegB  () const { return mRegB; }
 	u8  GetRegC  () const { return mRegC; }
-	u8  GetRegD  () const { return mRegD; }
-	u8  GetRegE  () const { return mRegE; }
+	u16 GetRegDE () const { return mRegDE.de; }
+	u8  GetRegD  () const { return mRegDE.d; }
+	u8  GetRegE  () const { return mRegDE.e; }
+	u16 GetRegHL () const { return mRegHL.hl; }
 	u8  GetRegH  () const { return mRegHL.h; }
 	u8  GetRegL  () const { return mRegHL.l; }
 	u16 GetRegSP () const { return mRegSP; }
@@ -46,11 +48,20 @@ private:
 		};
 	};
 
+	union RegDE
+	{
+		u16 de{ 0 };
+		struct
+		{
+			u8 e;
+			u8 d;
+		};
+	};
+
 	u8   mRegA {0};
 	u8   mRegB {0};
 	u8   mRegC {0};
-	u8   mRegD {0};
-	u8   mRegE {0};
+	RegDE mRegDE;
 	RegHL mRegHL;
 	u16  mRegSP {0};
 	u16  mRegPC {0};
@@ -65,6 +76,8 @@ private:
 	vector<ICpuListener*> mListeners;
 
 	void ProcessCb(u8 _opcode);
+	void InternalStep();
+	void IncReg(u8 &_reg);
 };
 
 #endif

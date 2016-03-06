@@ -44,9 +44,17 @@ int main(int argn, char *argv[])
 	// ...
 	SDL_Event event;
 	bool done = false;
+	Uint32 actTime = 0;
+	Uint32 prevTime = 0;
+	Uint32 delta = 0;
+	Uint32 timeToRender = 0;
 
 	while(!done)
 	{
+		actTime = SDL_GetTicks();
+		delta = actTime - prevTime;
+		prevTime = actTime;
+
 		while(SDL_PollEvent(&event))
 		{
 			if ((((event.type == SDL_WINDOWEVENT) && (event.window.event == SDL_WINDOWEVENT_CLOSE))) || (event.type == SDL_QUIT))
@@ -62,8 +70,20 @@ int main(int argn, char *argv[])
 
 		machine.Update();
 
-		if ((debugger != nullptr) && gb.GetCpu().IsOnDebugMode())
-			debugger->Render();
+		if (debugger != nullptr)
+		{
+			if (gb.GetCpu().IsOnDebugMode())
+				debugger->Render();
+			else
+			{
+				timeToRender += delta;
+				if (timeToRender >= 100)
+				{
+					debugger->Render();
+					timeToRender = 0;
+				}
+			}
+		}
 	}
 
 	SDL_Quit();

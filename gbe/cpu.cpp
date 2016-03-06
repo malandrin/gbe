@@ -16,10 +16,59 @@ void CPU::AddListener(ICpuListener *_listener)
 //--------------------------------------------
 void CPU::Step()
 {
+    try
+    {
+        InternalStep();
+    }
+    catch(runtime_error &e)
+    {
+        cout << e.what() << '\n';
+        exit(-1);
+    }
+}
+
+//--------------------------------------------
+// --
+//--------------------------------------------
+void CPU::IncReg(u8 &_reg)
+{
+    u8 prevVal = _reg;
+    ++_reg;
+    mFlagZ = (_reg == 0);
+    mFlagN = false;
+    mFlagH = (prevVal < 16) && (_reg >= 16);
+}
+
+//--------------------------------------------
+// --
+//--------------------------------------------
+void CPU::InternalStep()
+{
     u8 opcode = mMmu.ReadU8(mRegPC++);
 
     switch(opcode)
     {
+        case 0x0C: // INC C
+            IncReg(mRegC);
+            break;
+
+        case 0x0E: // LD C, n
+            mRegC = mMmu.ReadU8(mRegPC++);
+            break;
+
+        case 0x11: // LD DE, nn
+            mRegDE.de = mMmu.ReadU16(mRegPC);
+            mRegPC += 2;
+            break;
+
+        case 0x1A: // LD A, (DE)
+            mRegA = mMmu.ReadU8(mRegDE.de);
+            break;
+
+        case 0x1C: // INC E
+            IncReg(mRegDE.e);
+            break;
+
         case 0x20: // JR NZ, r8
 		{
 			i8 offset = (i8)mMmu.ReadU8(mRegPC++);
@@ -43,6 +92,14 @@ void CPU::Step()
 			mMmu.WriteU8(mRegHL.hl--, mRegA);
 	        break;
 
+        case 0x3E: // LD A, n
+            mRegA = mMmu.ReadU8(mRegPC++);
+            break;
+
+        case 0x77: // LD (HL), A
+            mMmu.WriteU8(mRegHL.hl, mRegA);
+            break;
+
         case 0xAF: // XOR A
             mRegA = 0;
             mFlagZ = true;
@@ -53,6 +110,14 @@ void CPU::Step()
 
         case 0xCB: // CB
             ProcessCb(mMmu.ReadU8(mRegPC++));
+            break;
+
+        case 0xE0: // LD (0xFF00 + n), A
+            mMmu.WriteU8(0xFF00 + mMmu.ReadU8(mRegPC++), mRegA);
+            break;
+
+        case 0xE2: // LD (0xFF00 + C), A
+            mMmu.WriteU8(0xFF00 + mRegC, mRegA);
             break;
 
         default:

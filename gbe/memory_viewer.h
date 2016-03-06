@@ -13,11 +13,10 @@ public:
 
 private:
     static const int mNumCols = 32;
-    static const int mNumMemInfo = 3;
 
     struct MemInfo
     {
-        void Set(const u8 *_m, int _s, int _ba, int _ls, string& _mt)
+        MemInfo(const u8 *_m, int _s, int _ba, int _ls, string& _mt)
         {
             mem = _m;
             size = _s;
@@ -37,16 +36,16 @@ private:
 
     const MMU &mMmu;
 
-    MemInfo mMemInfo[mNumMemInfo];
-    int     mAddrDigitCount {0};
-    int     mLineTotalCount {0};
-	int     mMemSize{0};
+    vector<MemInfo> mMemInfo;
+    int mAddrDigitCount {0};
+    int mLineTotalCount {0};
+	int mMemSize{0};
 
     void    CalculateMemInfo  ();
 
     inline int GetMemInfoByLine (int _line)
     {
-		for (int i = 0; i < mNumMemInfo; ++i)
+		for (u32 i = 0; i < mMemInfo.size(); ++i)
 		{
 			if ((_line >= mMemInfo[i].lineStart) && (_line < mMemInfo[i].lineEnd))
 				return i;

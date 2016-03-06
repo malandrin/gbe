@@ -2,12 +2,13 @@
 #include <imgui_impl_sdl.h>
 #include "base.h"
 #include "cpu.h"
+#include "mmu.h"
 #include "registers_viewer.h"
 
 //--------------------------------------------
 // --
 //--------------------------------------------
-RegistersViewer::RegistersViewer(const CPU &_cpu) : mCpu(_cpu)
+RegistersViewer::RegistersViewer(const CPU &_cpu, const MMU &_mmu) : mCpu(_cpu), mMmu(_mmu)
 {
 
 }
@@ -31,11 +32,11 @@ void RegistersViewer::Render()
 
         ImGui::Text("DE: ");
         ImGui::SameLine();
-        ImGui::Text("%02X|%02X", mCpu.GetRegD(), mCpu.GetRegE());
+        ImGui::Text("%02X|%02X (%02X)", mCpu.GetRegD(), mCpu.GetRegE(), mMmu.ReadU8(mCpu.GetRegDE()));
 
         ImGui::Text("HL: ");
         ImGui::SameLine();
-        ImGui::Text("%02X|%02X", mCpu.GetRegH(), mCpu.GetRegL());
+        ImGui::Text("%02X|%02X (%02X)", mCpu.GetRegH(), mCpu.GetRegL(), mMmu.ReadU8(mCpu.GetRegHL()));
 
         ImGui::Text("SP: ");
         ImGui::SameLine();

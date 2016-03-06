@@ -86,26 +86,34 @@ void MemoryViewer::Render()
 //--------------------------------------------
 void MemoryViewer::CalculateMemInfo()
 {
-	// Bootable rom / cartridge rom
+	mMemInfo.clear();
+
+	// Bootable rom
 	if (mMmu.IsInBootableRom())
-		mMemInfo[0].Set(mMmu.GetBootableRom(), MMU::BootableRomSize, 0, 0, string("BROM"));
-	else
-		mMemInfo[0].Set(mMmu.GetRom(), mMmu.GetRomSize(), 0, 0, string(" ROM"));
+		mMemInfo.push_back(MemInfo(mMmu.GetBootableRom(), MMU::BootableRomSize, 0, 0, string("BROM")));
+
+	// cartridge rom
+	mMemInfo.push_back(MemInfo(mMmu.GetRom(), mMmu.GetRomSize(), 0,
+							   mMmu.IsInBootableRom() ? mMemInfo[0].lineEnd : 0, string(" ROM")));
 
 	// vram
-	mMemInfo[1].Set(mMmu.GetVRam(), MMU::VRamSize, 0x8000, mMemInfo[0].lineEnd, string("VRAM"));
+	mMemInfo.push_back(MemInfo(mMmu.GetVRam(), MMU::VRamSize, 0x8000, mMemInfo[mMemInfo.size() - 1].lineEnd, string("VRAM")));
 
 	// ram
-	mMemInfo[2].Set(mMmu.GetRam(), MMU::RamSize, 0xC000, mMemInfo[1].lineEnd, string(" RAM"));
+	mMemInfo.push_back(MemInfo(mMmu.GetRam(), MMU::RamSize, 0xC000, mMemInfo[mMemInfo.size() - 1].lineEnd, string(" RAM")));
+
+	// IO registers
+	mMemInfo.push_back(MemInfo(mMmu.GetIORegisters(), MMU::IORegistersSize, 0xFF00, mMemInfo[mMemInfo.size() - 1].lineEnd, string("IORG")));
 
 	// ...
 	mAddrDigitCount = 0;
+	int numMemInfo = mMemInfo.size() - 1;
 
-	for (int n = mMemInfo[2].baseAddr + mMemInfo[2].size - 1; n > 0; n >>= 4)
+	for (int n = mMemInfo[numMemInfo].baseAddr + mMemInfo[numMemInfo].size - 1; n > 0; n >>= 4)
 		++mAddrDigitCount;
 
 	mLineTotalCount = 0;
-	mMemSize = mMemInfo[2].baseAddr + mMemInfo[2].size;
+	mMemSize = mMemInfo[numMemInfo].baseAddr + mMemInfo[numMemInfo].size;
 
 	for each(auto &mi in mMemInfo)
 		mLineTotalCount += mi.lineEnd - mi.lineStart;

@@ -8,13 +8,14 @@ class RegistersViewer
 {
 public:
 
-	RegistersViewer(const CPU &_cpu);
+	RegistersViewer(const CPU &_cpu, const MMU &_mmu);
 
 	void Render();
 
 private:
 
 	const CPU &mCpu;
+    const MMU &mMmu;
 };
 
-#endif 
+#endif

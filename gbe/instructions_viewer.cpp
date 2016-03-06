@@ -173,6 +173,27 @@ void InstructionsViewer::CalculateInstructionLines()
 
         switch(opcode)
         {
+            case 0x0C: // INC C
+                mInstructionLines.push_back(InstructionLine(addr, 1, string("INC C")));
+                break;
+
+            case 0x0E: // LD C, n
+                mInstructionLines.push_back(InstructionLine(addr, 2, string("LD C, ") + Int2Hex(mMmu.ReadU8(i++))));
+                break;
+
+            case 0x11: // LD DE, nn
+                mInstructionLines.push_back(InstructionLine(addr, 3, string("LD DE, ") + Int2Hex(mMmu.ReadU16(i))));
+                i += 2;
+                break;
+
+            case 0x1A: // LD A, (DE)
+                mInstructionLines.push_back(InstructionLine(addr, 1, string("LD A, (DE)")));
+                break;
+
+            case 0x1C: // INC E
+                mInstructionLines.push_back(InstructionLine(addr, 1, string("INC E")));
+                break;
+
             case 0x20: // JR NZ, r8
                 mInstructionLines.push_back(InstructionLine(addr, 2, string("JR NZ, :") + Int2Hex(i + 1 + (i8)mMmu.ReadU8(i))));
                 i += 1;
@@ -192,12 +213,28 @@ void InstructionsViewer::CalculateInstructionLines()
                 mInstructionLines.push_back(InstructionLine(addr, 1, string("LD (HL-), A")));
                 break;
 
+            case 0x3E: // LD A, n
+                mInstructionLines.push_back(InstructionLine(addr, 2, string("LD A, ") + Int2Hex(mMmu.ReadU8(i++))));
+                break;
+
             case 0xAF: // XOR A
                 mInstructionLines.push_back(InstructionLine(addr, 1, string("XOR A")));
                 break;
 
             case 0xCB: // CB
                 ProcessCb(mMmu.ReadU8(i++), addr);
+                break;
+
+            case 0x77: // LD (HL), A
+                mInstructionLines.push_back(InstructionLine(addr, 1, string("LD (HL), A")));
+                break;
+
+            case 0xE0: // LD (0xFF00 + n), A
+                mInstructionLines.push_back(InstructionLine(addr, 1, string("LD (FF00 + " + Int2Hex(mMmu.ReadU8(i++)) + "), A")));
+                break;
+
+            case 0xE2: // LD (0xFF00 + C), A
+                mInstructionLines.push_back(InstructionLine(addr, 1, string("LD (FF00 + C), A")));
                 break;
 
 			default:
@@ -222,7 +259,7 @@ void InstructionsViewer::ProcessCb(u8 _opcode, u16 _addr)
     switch(_opcode)
     {
         case 0x7C: // BIT 7, H
-            mInstructionLines.push_back(InstructionLine(_addr, 1, string("BIT 7, H")));
+            mInstructionLines.push_back(InstructionLine(_addr, 2, string("BIT 7, H")));
             break;
     }
 }

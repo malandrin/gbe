@@ -29,7 +29,7 @@ Machine::~Machine()
 void Machine::Update()
 {
 	if (!mCpu.IsOnDebugMode())
-		mCpu.Step();
+	    mCpu.Step();
 }
 
 //--------------------------------------------
