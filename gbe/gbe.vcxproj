@@ -161,7 +161,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="memory_viewer.cpp" />
     <ClCompile Include="mmu.cpp" />
-    <ClCompile Include="registers_viewer.cpp" />
+    <ClCompile Include="general_viewer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\3rdparty\imgui\imgui.h" />
@@ -174,7 +174,7 @@
     <ClInclude Include="machine.h" />
     <ClInclude Include="memory_viewer.h" />
     <ClInclude Include="mmu.h" />
-    <ClInclude Include="registers_viewer.h" />
+    <ClInclude Include="general_viewer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

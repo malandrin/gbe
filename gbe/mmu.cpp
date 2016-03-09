@@ -12,6 +12,7 @@ MMU::MMU()
     fill_n(mVRam, VRamSize, 255);
     fill_n(mBootableRom, BootableRomSize, 0);
     fill_n(mIORegisters, IORegistersSize, 0);
+    fill_n(mHighRam, HighRamSize, 0);
 }
 
 //--------------------------------------------
@@ -76,6 +77,11 @@ u8* MMU::VirtAddrToPhysAddr(u16 _virtAddr) const
     if ((_virtAddr >= 0xFF00) && (_virtAddr <= 0xFF7F))
     {
         return (u8*)&mIORegisters[_virtAddr - 0xFF00];
+    }
+
+    if ((_virtAddr >= 0xFF80) && (_virtAddr <= 0xFFFE))
+    {
+        return (u8*)&mHighRam[_virtAddr - 0xFF80];
     }
 
     throw runtime_error("memory address unknown: " + Int2Hex(_virtAddr));

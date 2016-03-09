@@ -105,6 +105,9 @@ void MemoryViewer::CalculateMemInfo()
 	// IO registers
 	mMemInfo.push_back(MemInfo(mMmu.GetIORegisters(), MMU::IORegistersSize, 0xFF00, mMemInfo[mMemInfo.size() - 1].lineEnd, string("IORG")));
 
+	// high ram
+	mMemInfo.push_back(MemInfo(mMmu.GetHighRam(), MMU::HighRamSize, 0xFF80, mMemInfo[mMemInfo.size() - 1].lineEnd, string("HRAM")));
+
 	// ...
 	mAddrDigitCount = 0;
 	int numMemInfo = mMemInfo.size() - 1;

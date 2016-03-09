@@ -3,12 +3,12 @@
 #include "base.h"
 #include "cpu.h"
 #include "mmu.h"
-#include "registers_viewer.h"
+#include "general_viewer.h"
 
 //--------------------------------------------
 // --
 //--------------------------------------------
-RegistersViewer::RegistersViewer(const CPU &_cpu, const MMU &_mmu) : mCpu(_cpu), mMmu(_mmu)
+GeneralViewer::GeneralViewer(const CPU &_cpu, const MMU &_mmu) : mCpu(_cpu), mMmu(_mmu)
 {
 
 }
@@ -16,11 +16,60 @@ RegistersViewer::RegistersViewer(const CPU &_cpu, const MMU &_mmu) : mCpu(_cpu),
 //--------------------------------------------
 // --
 //--------------------------------------------
-void RegistersViewer::Render()
+void GeneralViewer::Render()
+{
+    RenderRegistersWnd();
+    RenderStackWnd();
+}
+
+//--------------------------------------------
+// --
+//--------------------------------------------
+void GeneralViewer::RenderStackWnd()
+{
+    ImGui::SetNextWindowPos(ImVec2(405, 150));
+
+    if (ImGui::Begin("Stack", nullptr, ImVec2(150, 318), 1.0f, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings))
+    {
+		u16 sp = mCpu.GetRegSP();
+
+		if (sp != 0)
+		{
+			float lineHeight = ImGui::GetTextLineHeight();
+			int lineTotalCount = (0xFFFE - sp) >> 1;
+
+			ImGui::BeginChild("##stack_scrolling", ImVec2(0, 0));
+
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+
+			ImGuiListClipper clipper(lineTotalCount, lineHeight);
+
+			int addr = sp;
+
+			for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
+			{
+				ImGui::Text("%0*X", 4, mMmu.ReadU16(addr));
+				addr += 2;
+			}
+
+			clipper.End();
+			ImGui::PopStyleVar(2);
+			ImGui::EndChild();
+		}
+    }
+
+    ImGui::End();
+}
+
+//--------------------------------------------
+// --
+//--------------------------------------------
+void GeneralViewer::RenderRegistersWnd()
 {
     ImGui::SetNextWindowPos(ImVec2(405, 0));
 
-    if (ImGui::Begin("Registers", nullptr, ImVec2(250, 300), 1.0f, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings))
+    if (ImGui::Begin("Registers", nullptr, ImVec2(150, 150), 1.0f, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings))
     {
         ImGui::Text("A:  ");
         ImGui::SameLine();
@@ -32,11 +81,11 @@ void RegistersViewer::Render()
 
         ImGui::Text("DE: ");
         ImGui::SameLine();
-        ImGui::Text("%02X|%02X (%02X)", mCpu.GetRegD(), mCpu.GetRegE(), mMmu.ReadU8(mCpu.GetRegDE()));
+        ImGui::Text("%02X|%02X", mCpu.GetRegD(), mCpu.GetRegE());
 
         ImGui::Text("HL: ");
         ImGui::SameLine();
-        ImGui::Text("%02X|%02X (%02X)", mCpu.GetRegH(), mCpu.GetRegL(), mMmu.ReadU8(mCpu.GetRegHL()));
+        ImGui::Text("%02X|%02X", mCpu.GetRegH(), mCpu.GetRegL());
 
         ImGui::Text("SP: ");
         ImGui::SameLine();

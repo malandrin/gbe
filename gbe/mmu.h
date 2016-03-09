@@ -12,6 +12,7 @@ public:
 	static const int VRamSize = 1024 * 8;
 	static const int BootableRomSize = 256;
     static const int IORegistersSize = 128;
+    static const int HighRamSize = 127;
 
     inline void WriteU8(u16 _virtAdd, u8 _value)
     {
@@ -38,6 +39,7 @@ public:
 	const u8* GetRam() const {return mRam;}
 	const u8* GetVRam() const { return mVRam; }
     const u8* GetIORegisters() const { return mIORegisters; }
+    const u8* GetHighRam() const { return mHighRam; }
 
 	bool LoadRoms   (const string& _bootableRom, const string& _cartridge);
 
@@ -54,6 +56,7 @@ private:
 	u8 mVRam[VRamSize];
 	u8 mBootableRom[BootableRomSize];
     u8 mIORegisters[IORegistersSize];
+    u8 mHighRam[HighRamSize];
 	u8 *mRom {nullptr};
 	int mRomSize{0};
     bool mBootableRomEnabled {true};

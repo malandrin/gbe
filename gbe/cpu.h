@@ -13,8 +13,8 @@ public:
 	void Step();
 
 	u8  GetRegA  () const { return mRegA; }
-	u8  GetRegB  () const { return mRegB; }
-	u8  GetRegC  () const { return mRegC; }
+	u8  GetRegB  () const { return mRegBC.b; }
+	u8  GetRegC  () const { return mRegBC.c; }
 	u16 GetRegDE () const { return mRegDE.de; }
 	u8  GetRegD  () const { return mRegDE.d; }
 	u8  GetRegE  () const { return mRegDE.e; }
@@ -58,9 +58,18 @@ private:
 		};
 	};
 
+	union RegBC
+	{
+		u16 bc{ 0 };
+		struct
+		{
+			u8 c;
+			u8 b;
+		};
+	};
+
 	u8   mRegA {0};
-	u8   mRegB {0};
-	u8   mRegC {0};
+	RegBC mRegBC;
 	RegDE mRegDE;
 	RegHL mRegHL;
 	u16  mRegSP {0};
@@ -78,6 +87,12 @@ private:
 	void ProcessCb(u8 _opcode);
 	void InternalStep();
 	void IncReg(u8 &_reg);
+	void DecReg(u8 &_reg);
+	void SubRegA(u8 _reg);
+	void RotateLeft(u8 &_reg);
+
+	void Push(u16 _val);
+	u16  Pop();
 };
 
 #endif
