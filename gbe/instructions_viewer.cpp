@@ -366,9 +366,6 @@ void InstructionsViewer::CalculateInstructionLines()
 				break;
         }
 
-		if (mInstructionLines.size() == 89)
-			int a = 0;
-
         mMapAddr2Line[addr] = mInstructionLines.size() - 1;
     }
 
