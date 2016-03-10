@@ -86,10 +86,15 @@ private:
 
 	void ProcessCb(u8 _opcode);
 	void InternalStep();
+
 	void IncReg(u8 &_reg);
 	void DecReg(u8 &_reg);
-	void SubRegA(u8 _reg);
 	void RotateLeft(u8 &_reg);
+
+	void SubRegA(u8 _val);
+	void AddRegA(u8 _val);
+	void CpRegA(u8 _val);
+	void AndRegA(u8 _val);
 
 	void Push(u16 _val);
 	u16  Pop();

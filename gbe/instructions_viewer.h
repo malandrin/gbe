@@ -39,6 +39,7 @@ private:
     vector<InstructionLine> mInstructionLines;
     int                     mSelectedLineIdx {-1};
     int                     mActiveLineIdx {0};
+    int                     mPrevActiveLineIdx {0};
     int                     mAddrDigitCount;
     unordered_set<int>      mBreakpoints;
     map<u16, int>           mMapAddr2Line;

@@ -54,14 +54,51 @@ void CPU::DecReg(u8 &_reg)
 //--------------------------------------------
 // --
 //--------------------------------------------
-void CPU::SubRegA(u8 _reg)
+void CPU::SubRegA(u8 _val)
 {
     u8 prevVal = mRegA;
-    mRegA -= _reg;
+    mRegA -= _val;
     mFlagZ = (mRegA == 0);
     mFlagN = true;
     mFlagH = false; // TODO: REVISAR COMO FUNCIONA EL FLAG H
-    mFlagC = mRegA < _reg; // TODO: REVISAR ESTO TAMBIEN
+    mFlagC = mRegA < _val; // TODO: REVISAR ESTO TAMBIEN
+}
+
+//--------------------------------------------
+// --
+//--------------------------------------------
+void CPU::AddRegA(u8 _val)
+{
+    bool b3 = (mRegA & 0b00001000) != 0;
+    bool b7 = (mRegA & 0b10000000) != 0;
+
+    mRegA += _val;
+    mFlagZ = (mRegA == 0);
+    mFlagN = false;
+    mFlagH = b3 && ((mRegA & 0b00001000) == 0);
+    mFlagC = b7 && ((mRegA & 0b10000000) == 0);
+}
+
+//--------------------------------------------
+// --
+//--------------------------------------------
+void CPU::CpRegA(u8 _val)
+{
+    mFlagZ = (mRegA == _val);
+    mFlagN = true;
+    mFlagH = false; // TODO: REVISAR ESTO
+    mFlagC = (mRegA < _val);
+}
+
+//--------------------------------------------
+// --
+//--------------------------------------------
+void CPU::AndRegA(u8 _val)
+{
+    mFlagZ = (mRegA & _val) == 0;
+    mFlagN = false;
+    mFlagH = true;
+    mFlagC = false;
 }
 
 //--------------------------------------------
@@ -85,6 +122,13 @@ void CPU::InternalStep()
 
     switch(opcode)
     {
+        case 0x00: // NOP
+            break;
+
+        case 0x03: // INC BC
+            ++mRegBC.bc;
+            break;
+
         case 0x04: // INC B
             IncReg(mRegBC.b);
             break;
@@ -95,6 +139,15 @@ void CPU::InternalStep()
 
         case 0x06: // LD B, n
             mRegBC.b = mMmu.ReadU8(mRegPC++);
+            break;
+
+        case 0x08: // LD (nn), SP
+            mMmu.WriteU16(mMmu.ReadU16(mRegPC), mRegSP);
+            mRegPC += 2;
+            break;
+
+        case 0x0B: // DEC BC
+            --mRegBC.bc;
             break;
 
         case 0x0C: // INC C
@@ -201,12 +254,24 @@ void CPU::InternalStep()
 			mMmu.WriteU8(mRegHL.hl--, mRegA);
 	        break;
 
+        case 0x33: // INC SP
+            ++mRegSP;
+            break;
+
+        case 0x3C: // INC A
+            IncReg(mRegA);
+            break;
+
         case 0x3D: // DEC A
             DecReg(mRegA);
             break;
 
         case 0x3E: // LD A, n
             mRegA = mMmu.ReadU8(mRegPC++);
+            break;
+
+        case 0x42: // LD B, D
+            mRegBC.b = mRegDE.d;
             break;
 
         case 0x4F: // LD C, A
@@ -217,12 +282,32 @@ void CPU::InternalStep()
             mRegDE.d = mRegA;
             break;
 
+        case 0x63: // LD H, E
+            mRegHL.h = mRegDE.e;
+            break;
+
+        case 0x66: // LD H, (HL)
+            mRegHL.h = mMmu.ReadU8(mRegHL.hl);
+            break;
+
         case 0x67: // LD H, A
             mRegHL.h = mRegA;
             break;
 
+        case 0x6E: // LD L, (HL)
+            mRegHL.l = mMmu.ReadU8(mRegHL.hl);
+            break;
+
+        case 0x73: // LD (HL), E
+            mMmu.WriteU8(mRegHL.hl, mRegDE.e);
+            break;
+
         case 0x77: // LD (HL), A
             mMmu.WriteU8(mRegHL.hl, mRegA);
+            break;
+
+        case 0x78: // LD A, B
+            mRegA = mRegBC.b;
             break;
 
         case 0x7B: // LD A, E
@@ -233,8 +318,40 @@ void CPU::InternalStep()
             mRegA = mRegHL.h;
             break;
 
+        case 0x7D: // LD A, L
+            mRegA = mRegHL.l;
+            break;
+
+        case 0x83: // ADD A, E
+            AddRegA(mRegDE.e);
+            break;
+
+        case 0x86: // ADD A, (HL)
+            AddRegA(mMmu.ReadU16(mRegHL.hl));
+            break;
+
+        case 0x88: // ADC A, B
+            AddRegA(mRegBC.b + (mFlagC ? 1 : 0));
+            break;
+
+        case 0x89: // ADC A, C
+            AddRegA(mRegBC.c + (mFlagC ? 1 : 0));
+            break;
+
         case 0x90: // SUB B
             SubRegA(mRegBC.b);
+            break;
+
+        case 0x99: // SBC A, C
+            SubRegA(mRegBC.c + (mFlagC ? 1 : 0));
+            break;
+
+        case 0x9F: // SBC A, A
+            SubRegA(mRegA + (mFlagC ? 1 : 0));
+            break;
+
+        case 0xA5: // AND L
+            AndRegA(mRegHL.l);
             break;
 
         case 0xAF: // XOR A
@@ -243,6 +360,18 @@ void CPU::InternalStep()
             mFlagN = false;
             mFlagH = false;
             mFlagC = false;
+            break;
+
+        case 0xB9: // CP C
+            CpRegA(mRegBC.c);
+            break;
+
+        case 0xBB: // CP E
+            CpRegA(mRegDE.e);
+            break;
+
+        case 0xBE: // CP (HL)
+            CpRegA(mMmu.ReadU8(mRegHL.hl));
             break;
 
         case 0xC1: // POP BC
@@ -261,9 +390,30 @@ void CPU::InternalStep()
             ProcessCb(mMmu.ReadU8(mRegPC++));
             break;
 
+        case 0xCC: // CALL Z, nn
+        {
+            u16 dst = mMmu.ReadU16(mRegPC);
+            mRegPC += 2;
+            if (mFlagZ)
+            {
+                Push(mRegPC);
+                mRegPC = dst;
+            }
+        }
+        break;
+
         case 0xCD: // CALL nn
             Push(mRegPC + 2);
             mRegPC = mMmu.ReadU16(mRegPC);
+            break;
+
+        case 0xCE: // ADC A, n
+            AddRegA(mMmu.ReadU8(mRegPC++) + (mFlagC ? 1 : 0));
+            break;
+
+        case 0xD9: // RETI
+            mRegPC = Pop();
+            // TODO: ACTIVAR INTERRUPCIONES
             break;
 
         case 0xE0: // LD (0xFF00 + n), A
@@ -284,16 +434,8 @@ void CPU::InternalStep()
             break;
 
         case 0xFE: // CP n
-        {
-            u8 n = mMmu.ReadU8(mRegPC++);
-            u8 diff = mRegA - n;
-
-            mFlagZ = (mRegA == n);
-            mFlagN = true;
-            mFlagH = (diff < 16);
-            mFlagC = (mRegA < n);
-        }
-        break;
+            CpRegA(mMmu.ReadU8(mRegPC++));
+            break;
 
         default:
             throw runtime_error("opcode unknown: " + Int2Hex(opcode));
