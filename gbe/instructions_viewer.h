@@ -3,6 +3,7 @@
 #define _INSTRUCTIONS_VIEWER_H
 
 #include "cpu_listener.h"
+#include "rom_walker.h"
 
 class MMU;
 class CPU;
@@ -36,6 +37,7 @@ private:
 
     const MMU               &mMmu;
     CPU                     &mCpu;
+    ROMWalker               mROMWalker;
     vector<InstructionLine> mInstructionLines;
     int                     mSelectedLineIdx {-1};
     int                     mActiveLineIdx {0};

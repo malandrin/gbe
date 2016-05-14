@@ -162,6 +162,7 @@
     <ClCompile Include="memory_viewer.cpp" />
     <ClCompile Include="mmu.cpp" />
     <ClCompile Include="general_viewer.cpp" />
+    <ClCompile Include="rom_walker.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\3rdparty\imgui\imgui.h" />
@@ -175,6 +176,7 @@
     <ClInclude Include="memory_viewer.h" />
     <ClInclude Include="mmu.h" />
     <ClInclude Include="general_viewer.h" />
+    <ClInclude Include="rom_walker.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

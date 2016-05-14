@@ -8,7 +8,7 @@
 //--------------------------------------------
 // --
 //--------------------------------------------
-InstructionsViewer::InstructionsViewer(const MMU &_mmu, CPU &_cpu) : mMmu(_mmu), mCpu(_cpu)
+InstructionsViewer::InstructionsViewer(const MMU &_mmu, CPU &_cpu) : mMmu(_mmu), mCpu(_cpu), mROMWalker(_mmu.GetActiveRom(), _mmu.GetActiveRomSize(), _mmu.GetActiveRomEntryAddr())
 {
     CalculateInstructionLines();
 	mCpu.AddListener(this);
@@ -176,7 +176,7 @@ void InstructionsViewer::CalculateInstructionLines()
 	mInstructionLines.clear();
     mMapAddr2Line.clear();
 
-    int instrMemSize = mMmu.IsInBootableRom() ? MMU::BootableRomSize : mMmu.GetRomSize();
+    int instrMemSize = mMmu.GetActiveRomSize();
     int i = 0;
 
     while(i < instrMemSize)
@@ -184,308 +184,313 @@ void InstructionsViewer::CalculateInstructionLines()
         u16 addr = i;
         u8  opcode = mMmu.ReadU8(i++);
 
-        switch(opcode)
+        if (!mROMWalker.IsCode(addr))
+            mInstructionLines.push_back(InstructionLine(addr, 1, string(".DB " + Int2Hex(opcode))));
+        else 
         {
-            case 0x00: // NOP
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("NOP")));
-                break;
-
-            case 0x03: // INC BC
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("INC BC")));
-                break;
-
-            case 0x04: // INC B
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("INC B")));
-                break;
-
-            case 0x05: // DEC B
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("DEC B")));
-                break;
-
-            case 0x06: // LD B, n
-                mInstructionLines.push_back(InstructionLine(addr, 2, string("LD B, " + Int2Hex(mMmu.ReadU8(i++)))));
-                break;
-
-            case 0x08: // LD (nn), SP
-                mInstructionLines.push_back(InstructionLine(addr, 3, string("LD (" + Int2Hex(mMmu.ReadU16(i)) + "), SP")));
-                i += 2;
-                break;
-
-            case 0x0B: // DEC BC
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("DEC BC")));
-                break;
-
-            case 0x0C: // INC C
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("INC C")));
-                break;
-
-            case 0x0D: // DEC C
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("DEC C")));
-                break;
-
-            case 0x0E: // LD C, n
-                mInstructionLines.push_back(InstructionLine(addr, 2, string("LD C, ") + Int2Hex(mMmu.ReadU8(i++))));
-                break;
-
-            case 0x11: // LD DE, nn
-                mInstructionLines.push_back(InstructionLine(addr, 3, string("LD DE, ") + Int2Hex(mMmu.ReadU16(i))));
-                i += 2;
-                break;
-
-            case 0x13: // INC DE
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("INC DE")));
-                break;
-
-            case 0x15: // DEC D
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("DEC D")));
-                break;
-
-            case 0x16: // LD D, n
-                mInstructionLines.push_back(InstructionLine(addr, 2, string("LD D, ") + Int2Hex(mMmu.ReadU8(i++))));
-                break;
-
-            case 0x17: // RLA
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("RLA")));
-                break;
-
-            case 0x18: // JR r8
-                mInstructionLines.push_back(InstructionLine(addr, 2, string("JR :") + Int2Hex(i + 1 + (i8)mMmu.ReadU8(i))));
-                i += 1;
-                break;
-
-            case 0x1A: // LD A, (DE)
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("LD A, (DE)")));
-                break;
-
-            case 0x1C: // INC E
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("INC E")));
-                break;
-
-            case 0x1D: // DEC E
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("DEC E")));
-                break;
-
-            case 0x1E: // LD E, n
-                mInstructionLines.push_back(InstructionLine(addr, 2, string("LD E, ") + Int2Hex(mMmu.ReadU8(i++))));
-                break;
-
-            case 0x20: // JR NZ, r8
-                mInstructionLines.push_back(InstructionLine(addr, 2, string("JR NZ, :") + Int2Hex(i + 1 + (i8)mMmu.ReadU8(i))));
-                i += 1;
-                break;
-
-            case 0x21: // LD HL, nn
-                mInstructionLines.push_back(InstructionLine(addr, 3, string("LD HL, ") + Int2Hex(mMmu.ReadU16(i))));
-                i += 2;
-                break;
-
-            case 0x22: // LD (HL+), A
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("LD (HL+), A")));
-                break;
-
-            case 0x23: // INC HL
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("INC HL")));
-                break;
-
-            case 0x24: // INC H
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("INC H")));
-                break;
-
-            case 0x28: // JR Z, r8
-                mInstructionLines.push_back(InstructionLine(addr, 2, string("JR Z, :") + Int2Hex(i + 1 + (i8)mMmu.ReadU8(i))));
-                i += 1;
-                break;
-
-            case 0x2E: // LD L, n
-                mInstructionLines.push_back(InstructionLine(addr, 2, string("LD L, ") + Int2Hex(mMmu.ReadU8(i++))));
-                break;
-
-            case 0x31: // LD SP, nn
-                mInstructionLines.push_back(InstructionLine(addr, 3, string("LD SP, ") + Int2Hex(mMmu.ReadU16(i))));
-				i += 2;
-                break;
-
-            case 0x32: // LD (HL-), A
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("LD (HL-), A")));
-                break;
-
-            case 0x33: // INC SP
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("INC SP")));
-                break;
-
-            case 0x3C: // INC A
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("INC A")));
-                break;
-
-            case 0x3D: // DEC A
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("DEC A")));
-                break;
-
-            case 0x3E: // LD A, n
-                mInstructionLines.push_back(InstructionLine(addr, 2, string("LD A, ") + Int2Hex(mMmu.ReadU8(i++))));
-                break;
-
-            case 0x42: // LD B, D
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("LD B, D")));
-                break;
-
-            case 0x4F: // LD C, A
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("LD C, A")));
-                break;
-
-            case 0x57: // LD D, A
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("LD D, A")));
-                break;
-
-            case 0x63: // LD H, E
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("LD H, E")));
-                break;
-
-            case 0x66: // LD H, (HL)
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("LD H, (HL)")));
-                break;
-
-            case 0x67: // LD H, A
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("LD H, A")));
-                break;
-
-            case 0x6E: // LD L, (HL)
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("LD L, (HL)")));
-                break;
-
-            case 0x73: // LD (HL), E
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("LD (HL), E")));
-                break;
-
-            case 0x77: // LD (HL), A
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("LD (HL), A")));
-                break;
-
-            case 0x78: // LD A, B
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("LD A, B")));
-                break;
-
-            case 0x7B: // LD A, E
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("LD A, E")));
-                break;
-
-            case 0x7C: // LD A, H
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("LD A, H")));
-                break;
-
-            case 0x7D: // LD A, L
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("LD A, L")));
-                break;
-
-            case 0x83: // LD A, E
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("LD A, E")));
-                break;
-
-            case 0x86: // ADC A, (HL)
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("ADC A, (HL)")));
-                break;
-
-            case 0x88: // ADC A, B
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("ADC A, B")));
-                break;
-
-            case 0x89: // ADC A, C
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("ADC A, C")));
-                break;
-
-            case 0x90: // SUB B
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("SUB B")));
-                break;
-
-            case 0x99: // SBC A, C
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("SBC A, C")));
-                break;
-
-            case 0x9F: // SBC A, A
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("SBC A, A")));
-                break;
-
-            case 0xA5: // AND L
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("AND L")));
-                break;
-
-            case 0xAF: // XOR A
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("XOR A")));
-                break;
-
-            case 0xB9: // CP C
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("CP C")));
-                break;
-
-            case 0xBB: // CP E
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("CP E")));
-                break;
-
-            case 0xBE: // CP (HL)
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("CP (HL)")));
-                break;
-
-            case 0xC1: // POP BC
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("POP BC")));
-                break;
-
-            case 0xC5: // PUSH BC
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("PUSH BC")));
-                break;
-
-            case 0xC9: // RET
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("RET")));
-                break;
-
-            case 0xCB: // CB
-                ProcessCb(mMmu.ReadU8(i++), addr);
-                break;
-
-            case 0xCC: // CALL Z, nn
-                mInstructionLines.push_back(InstructionLine(addr, 3, string("CALL Z, " + Int2Hex(mMmu.ReadU16(i)))));
-                i += 2;
-                break;
-
-            case 0xCD: // CALL nn
-                mInstructionLines.push_back(InstructionLine(addr, 3, string("CALL " + Int2Hex(mMmu.ReadU16(i)))));
-                i += 2;
-                break;
-
-            case 0xCE: // ADC A, n
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("ADC A, " + Int2Hex(mMmu.ReadU8(i++)))));
-                break;
-
-            case 0xD9: // RETI
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("RETI")));
-                break;
-
-            case 0xE0: // LD (0xFF00 + n), A
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("LD (FF00 + " + Int2Hex(mMmu.ReadU8(i++)) + "), A")));
-                break;
-
-            case 0xEA: // LD (nn), A
-                mInstructionLines.push_back(InstructionLine(addr, 3, string("LD (" + Int2Hex(mMmu.ReadU16(i)) + "), A")));
-                i += 2;
-                break;
-
-            case 0xE2: // LD (0xFF00 + C), A
-                mInstructionLines.push_back(InstructionLine(addr, 1, string("LD (FF00 + C), A")));
-                break;
-
-            case 0xF0: // LD A, (0xFF00 + n)
-                mInstructionLines.push_back(InstructionLine(addr, 2, string("LD A, (FF00 + " + Int2Hex(mMmu.ReadU8(i++)) + ")")));
-                break;
-
-            case 0xFE: // CP n
-                mInstructionLines.push_back(InstructionLine(addr, 2, string("CP " + Int2Hex(mMmu.ReadU8(i++)))));
-                break;
-
-			default:
-				mInstructionLines.push_back(InstructionLine(addr, 1, string("OPCODE UNKNOW")));
-				break;
+            switch(opcode)
+            {
+                case 0x00: // NOP
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("NOP")));
+                    break;
+
+                case 0x03: // INC BC
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("INC BC")));
+                    break;
+
+                case 0x04: // INC B
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("INC B")));
+                    break;
+
+                case 0x05: // DEC B
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("DEC B")));
+                    break;
+
+                case 0x06: // LD B, n
+                    mInstructionLines.push_back(InstructionLine(addr, 2, string("LD B, " + Int2Hex(mMmu.ReadU8(i++)))));
+                    break;
+
+                case 0x08: // LD (nn), SP
+                    mInstructionLines.push_back(InstructionLine(addr, 3, string("LD (" + Int2Hex(mMmu.ReadU16(i)) + "), SP")));
+                    i += 2;
+                    break;
+
+                case 0x0B: // DEC BC
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("DEC BC")));
+                    break;
+
+                case 0x0C: // INC C
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("INC C")));
+                    break;
+
+                case 0x0D: // DEC C
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("DEC C")));
+                    break;
+
+                case 0x0E: // LD C, n
+                    mInstructionLines.push_back(InstructionLine(addr, 2, string("LD C, ") + Int2Hex(mMmu.ReadU8(i++))));
+                    break;
+
+                case 0x11: // LD DE, nn
+                    mInstructionLines.push_back(InstructionLine(addr, 3, string("LD DE, ") + Int2Hex(mMmu.ReadU16(i))));
+                    i += 2;
+                    break;
+
+                case 0x13: // INC DE
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("INC DE")));
+                    break;
+
+                case 0x15: // DEC D
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("DEC D")));
+                    break;
+
+                case 0x16: // LD D, n
+                    mInstructionLines.push_back(InstructionLine(addr, 2, string("LD D, ") + Int2Hex(mMmu.ReadU8(i++))));
+                    break;
+
+                case 0x17: // RLA
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("RLA")));
+                    break;
+
+                case 0x18: // JR r8
+                    mInstructionLines.push_back(InstructionLine(addr, 2, string("JR :") + Int2Hex(i + 1 + (i8)mMmu.ReadU8(i))));
+                    i += 1;
+                    break;
+
+                case 0x1A: // LD A, (DE)
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("LD A, (DE)")));
+                    break;
+
+                case 0x1C: // INC E
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("INC E")));
+                    break;
+
+                case 0x1D: // DEC E
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("DEC E")));
+                    break;
+
+                case 0x1E: // LD E, n
+                    mInstructionLines.push_back(InstructionLine(addr, 2, string("LD E, ") + Int2Hex(mMmu.ReadU8(i++))));
+                    break;
+
+                case 0x20: // JR NZ, r8
+                    mInstructionLines.push_back(InstructionLine(addr, 2, string("JR NZ, :") + Int2Hex(i + 1 + (i8)mMmu.ReadU8(i))));
+                    i += 1;
+                    break;
+
+                case 0x21: // LD HL, nn
+                    mInstructionLines.push_back(InstructionLine(addr, 3, string("LD HL, ") + Int2Hex(mMmu.ReadU16(i))));
+                    i += 2;
+                    break;
+
+                case 0x22: // LD (HL+), A
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("LD (HL+), A")));
+                    break;
+
+                case 0x23: // INC HL
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("INC HL")));
+                    break;
+
+                case 0x24: // INC H
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("INC H")));
+                    break;
+
+                case 0x28: // JR Z, r8
+                    mInstructionLines.push_back(InstructionLine(addr, 2, string("JR Z, :") + Int2Hex(i + 1 + (i8)mMmu.ReadU8(i))));
+                    i += 1;
+                    break;
+
+                case 0x2E: // LD L, n
+                    mInstructionLines.push_back(InstructionLine(addr, 2, string("LD L, ") + Int2Hex(mMmu.ReadU8(i++))));
+                    break;
+
+                case 0x31: // LD SP, nn
+                    mInstructionLines.push_back(InstructionLine(addr, 3, string("LD SP, ") + Int2Hex(mMmu.ReadU16(i))));
+				    i += 2;
+                    break;
+
+                case 0x32: // LD (HL-), A
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("LD (HL-), A")));
+                    break;
+
+                case 0x33: // INC SP
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("INC SP")));
+                    break;
+
+                case 0x3C: // INC A
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("INC A")));
+                    break;
+
+                case 0x3D: // DEC A
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("DEC A")));
+                    break;
+
+                case 0x3E: // LD A, n
+                    mInstructionLines.push_back(InstructionLine(addr, 2, string("LD A, ") + Int2Hex(mMmu.ReadU8(i++))));
+                    break;
+
+                case 0x42: // LD B, D
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("LD B, D")));
+                    break;
+
+                case 0x4F: // LD C, A
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("LD C, A")));
+                    break;
+
+                case 0x57: // LD D, A
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("LD D, A")));
+                    break;
+
+                case 0x63: // LD H, E
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("LD H, E")));
+                    break;
+
+                case 0x66: // LD H, (HL)
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("LD H, (HL)")));
+                    break;
+
+                case 0x67: // LD H, A
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("LD H, A")));
+                    break;
+
+                case 0x6E: // LD L, (HL)
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("LD L, (HL)")));
+                    break;
+
+                case 0x73: // LD (HL), E
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("LD (HL), E")));
+                    break;
+
+                case 0x77: // LD (HL), A
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("LD (HL), A")));
+                    break;
+
+                case 0x78: // LD A, B
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("LD A, B")));
+                    break;
+
+                case 0x7B: // LD A, E
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("LD A, E")));
+                    break;
+
+                case 0x7C: // LD A, H
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("LD A, H")));
+                    break;
+
+                case 0x7D: // LD A, L
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("LD A, L")));
+                    break;
+
+                case 0x83: // LD A, E
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("LD A, E")));
+                    break;
+
+                case 0x86: // ADD A, (HL)
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("ADD A, (HL)")));
+                    break;
+
+                case 0x88: // ADC A, B
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("ADC A, B")));
+                    break;
+
+                case 0x89: // ADC A, C
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("ADC A, C")));
+                    break;
+
+                case 0x90: // SUB B
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("SUB B")));
+                    break;
+
+                case 0x99: // SBC A, C
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("SBC A, C")));
+                    break;
+
+                case 0x9F: // SBC A, A
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("SBC A, A")));
+                    break;
+
+                case 0xA5: // AND L
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("AND L")));
+                    break;
+
+                case 0xAF: // XOR A
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("XOR A")));
+                    break;
+
+                case 0xB9: // CP C
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("CP C")));
+                    break;
+
+                case 0xBB: // CP E
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("CP E")));
+                    break;
+
+                case 0xBE: // CP (HL)
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("CP (HL)")));
+                    break;
+
+                case 0xC1: // POP BC
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("POP BC")));
+                    break;
+
+                case 0xC5: // PUSH BC
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("PUSH BC")));
+                    break;
+
+                case 0xC9: // RET
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("RET")));
+                    break;
+
+                case 0xCB: // CB
+                    ProcessCb(mMmu.ReadU8(i++), addr);
+                    break;
+
+                case 0xCC: // CALL Z, nn
+                    mInstructionLines.push_back(InstructionLine(addr, 3, string("CALL Z, " + Int2Hex(mMmu.ReadU16(i)))));
+                    i += 2;
+                    break;
+
+                case 0xCD: // CALL nn
+                    mInstructionLines.push_back(InstructionLine(addr, 3, string("CALL " + Int2Hex(mMmu.ReadU16(i)))));
+                    i += 2;
+                    break;
+
+                case 0xCE: // ADC A, n
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("ADC A, " + Int2Hex(mMmu.ReadU8(i++)))));
+                    break;
+
+                case 0xD9: // RETI
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("RETI")));
+                    break;
+
+                case 0xE0: // LD (0xFF00 + n), A
+                    mInstructionLines.push_back(InstructionLine(addr, 2, string("LD (FF00 + " + Int2Hex(mMmu.ReadU8(i++)) + "), A")));
+                    break;
+
+                case 0xEA: // LD (nn), A
+                    mInstructionLines.push_back(InstructionLine(addr, 3, string("LD (" + Int2Hex(mMmu.ReadU16(i)) + "), A")));
+                    i += 2;
+                    break;
+
+                case 0xE2: // LD (0xFF00 + C), A
+                    mInstructionLines.push_back(InstructionLine(addr, 1, string("LD (FF00 + C), A")));
+                    break;
+
+                case 0xF0: // LD A, (0xFF00 + n)
+                    mInstructionLines.push_back(InstructionLine(addr, 2, string("LD A, (FF00 + " + Int2Hex(mMmu.ReadU8(i++)) + ")")));
+                    break;
+
+                case 0xFE: // CP n
+                    mInstructionLines.push_back(InstructionLine(addr, 2, string("CP " + Int2Hex(mMmu.ReadU8(i++)))));
+                    break;
+
+			    default:
+				    mInstructionLines.push_back(InstructionLine(addr, 1, string("OPCODE UNKNOW")));
+				    break;
+            }
+
+            mMapAddr2Line[addr] = mInstructionLines.size() - 1;
         }
-
-        mMapAddr2Line[addr] = mInstructionLines.size() - 1;
     }
 
     mAddrDigitCount = 0;

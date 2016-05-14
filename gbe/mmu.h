@@ -45,6 +45,10 @@ public:
 
 	int  GetRomSize () const {return mRomSize;}
 
+    const u8* GetActiveRom() const { return mBootableRomEnabled ? mBootableRom : mRom; }
+    int GetActiveRomSize() const { return mBootableRomEnabled ? BootableRomSize : mRomSize; }
+    u16 GetActiveRomEntryAddr() const { return mBootableRomEnabled ? 0 : 0x100; } // TODO: revisar 0x100 si es correcto
+
     bool IsInBootableRom     () const {return mBootableRomEnabled;}
     void DisableBootableRom  () {mBootableRomEnabled = false;}
 
