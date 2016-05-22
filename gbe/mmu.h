@@ -2,6 +2,8 @@
 #ifndef _MMU_H
 #define _MMU_H
 
+#include "mmu_listener.h"
+
 class MMU
 {
 public:
@@ -17,6 +19,9 @@ public:
     inline void WriteU8(u16 _virtAdd, u8 _value)
     {
         *VirtAddrToPhysAddr(_virtAdd) = _value;
+
+        for each(auto l in mListeners)
+            l->OnMemoryWrittenU8(_virtAdd, _value);
     }
 
     inline u8 ReadU8(u16 _virtAdd) const
@@ -27,6 +32,9 @@ public:
     inline void WriteU16(u16 _virtAdd, u16 _value)
     {
         (*(u16*)VirtAddrToPhysAddr(_virtAdd)) = _value;
+
+        for each(auto l in mListeners)
+            l->OnMemoryWrittenU16(_virtAdd, _value);
     }
 
     inline u16 ReadU16(u16 _virtAdd) const
@@ -52,6 +60,8 @@ public:
     bool IsInBootableRom     () const {return mBootableRomEnabled;}
     void DisableBootableRom  () {mBootableRomEnabled = false;}
 
+    void AddListener (IMmuListener* _listener);
+
 private:
 
     u8* VirtAddrToPhysAddr   (u16 _virtAddr) const;
@@ -64,6 +74,7 @@ private:
 	u8 *mRom {nullptr};
 	int mRomSize{0};
     bool mBootableRomEnabled {true};
+    vector<IMmuListener*> mListeners;
 };
 
 #endif

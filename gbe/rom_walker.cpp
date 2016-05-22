@@ -99,8 +99,12 @@ void ROMWalker::AnalyzePath(u16 _addr)
             case 0xCD: // CALL nn
             {
                 u16 dst = *((u16*)&mRom[pc]);
-                stack.push_back(pc + 2);
-                pc = dst;
+
+                if (mCode.find(dst) == mCode.end())
+                {
+                    stack.push_back(pc + 2);
+                    pc = dst;
+                }
             }
             break;
 

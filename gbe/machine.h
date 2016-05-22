@@ -11,13 +11,14 @@ public:
 	~Machine();
 
 	void Update();
+    void Render();
 	void HandleEvent(SDL_Event& _event);
 
 private:
 	GB& mGb;
 	CPU& mCpu;
-	SDL_Window         *mWindow;
-	SDL_GLContext      mContext;
+    SDL_Window*   mWindow {nullptr};
+    SDL_Renderer* mRenderer {nullptr};
 };
 
 #endif 

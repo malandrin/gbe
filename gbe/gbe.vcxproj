@@ -156,6 +156,7 @@
     <ClCompile Include="cpu.cpp" />
     <ClCompile Include="debugger.cpp" />
     <ClCompile Include="gb.cpp" />
+    <ClCompile Include="gpu.cpp" />
     <ClCompile Include="instructions_viewer.cpp" />
     <ClCompile Include="machine.cpp" />
     <ClCompile Include="main.cpp" />
@@ -163,6 +164,7 @@
     <ClCompile Include="mmu.cpp" />
     <ClCompile Include="general_viewer.cpp" />
     <ClCompile Include="rom_walker.cpp" />
+    <ClCompile Include="vram_viewer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\3rdparty\imgui\imgui.h" />
@@ -171,12 +173,15 @@
     <ClInclude Include="cpu_listener.h" />
     <ClInclude Include="debugger.h" />
     <ClInclude Include="gb.h" />
+    <ClInclude Include="gpu.h" />
+    <ClInclude Include="mmu_listener.h" />
     <ClInclude Include="instructions_viewer.h" />
     <ClInclude Include="machine.h" />
     <ClInclude Include="memory_viewer.h" />
     <ClInclude Include="mmu.h" />
     <ClInclude Include="general_viewer.h" />
     <ClInclude Include="rom_walker.h" />
+    <ClInclude Include="vram_viewer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -108,8 +108,9 @@ void CPU::RotateLeft(u8 &_reg)
 {
     mFlagN = false;
     mFlagH = false;
+    u8 cb = mFlagC ? 1 : 0;
     mFlagC = (_reg & 0b10000000) != 0;
-    _reg = _reg << 1;
+    _reg = (_reg << 1) | cb;
 }
 
 
@@ -327,7 +328,7 @@ void CPU::InternalStep()
             break;
 
         case 0x86: // ADD A, (HL)
-            AddRegA(mMmu.ReadU16(mRegHL.hl));
+            AddRegA(mMmu.ReadU8(mRegHL.hl));
             break;
 
         case 0x88: // ADC A, B

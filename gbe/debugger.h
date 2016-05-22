@@ -5,6 +5,7 @@
 #include "memory_viewer.h"
 #include "instructions_viewer.h"
 #include "general_viewer.h"
+#include "vram_viewer.h"
 
 class GB;
 
@@ -23,6 +24,7 @@ private:
 	MemoryViewer       mMemoryViewer;
     InstructionsViewer mInstructionsViewer;
     GeneralViewer      mGeneralViewer;
+    VRAMViewer         mVRamViewer;
 };
 
 #endif

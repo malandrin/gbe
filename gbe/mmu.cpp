@@ -9,7 +9,7 @@
 MMU::MMU()
 {
     fill_n(mRam, RamSize, 0);
-    fill_n(mVRam, VRamSize, 255);
+    fill_n(mVRam, VRamSize, 0);
     fill_n(mBootableRom, BootableRomSize, 0);
     fill_n(mIORegisters, IORegistersSize, 0);
     fill_n(mHighRam, HighRamSize, 0);
@@ -24,6 +24,14 @@ MMU::~MMU()
     {
         delete[] mRom;
     }
+}
+
+//--------------------------------------------
+// --
+//--------------------------------------------
+void MMU::AddListener(IMmuListener* _listener)
+{
+    mListeners.push_back(_listener);
 }
 
 //--------------------------------------------

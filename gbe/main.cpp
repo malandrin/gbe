@@ -69,6 +69,7 @@ int main(int argn, char *argv[])
 		}
 
 		machine.Update();
+        machine.Render();
 
 		if (debugger != nullptr)
 		{
@@ -77,7 +78,7 @@ int main(int argn, char *argv[])
 			else
 			{
 				timeToRender += delta;
-				if (timeToRender >= 100)
+				if (timeToRender >= 300)
 				{
 					debugger->Render();
 					timeToRender = 0;

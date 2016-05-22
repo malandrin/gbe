@@ -3,6 +3,7 @@
 #include "base.h"
 #include "gb.h"
 #include "cpu.h"
+#include "gpu.h"
 #include "machine.h"
 
 //--------------------------------------------
@@ -10,8 +11,8 @@
 //--------------------------------------------
 Machine::Machine(GB& _gb) : mGb(_gb), mCpu(_gb.GetCpu())
 {
-	mWindow = SDL_CreateWindow("GBE", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 160, 144, SDL_WINDOW_OPENGL);
-	mContext = SDL_GL_CreateContext(mWindow);
+	mWindow = SDL_CreateWindow("GBE", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, GPU::ScreenWidth << 1, GPU::ScreenHeight << 1, SDL_WINDOW_OPENGL);
+    mRenderer = SDL_CreateRenderer(mWindow, -1, SDL_RENDERER_ACCELERATED);
 }
 
 //--------------------------------------------
@@ -19,7 +20,7 @@ Machine::Machine(GB& _gb) : mGb(_gb), mCpu(_gb.GetCpu())
 //--------------------------------------------
 Machine::~Machine()
 {
-	SDL_GL_DeleteContext(mContext);
+	SDL_DestroyRenderer(mRenderer);
 	SDL_DestroyWindow(mWindow);
 }
 
@@ -30,6 +31,18 @@ void Machine::Update()
 {
 	if (!mCpu.IsOnDebugMode())
 	    mCpu.Step();
+}
+
+//--------------------------------------------
+// --
+//--------------------------------------------
+void Machine::Render()
+{
+    SDL_RenderClear(mRenderer); // TODO: quitar cuando se pinte la textura
+
+    // TODO: copiar textura a pantalla
+
+    SDL_RenderPresent(mRenderer);
 }
 
 //--------------------------------------------
