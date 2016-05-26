@@ -172,6 +172,7 @@
     <ClInclude Include="cpu.h" />
     <ClInclude Include="cpu_listener.h" />
     <ClInclude Include="debugger.h" />
+    <ClInclude Include="defines.h" />
     <ClInclude Include="gb.h" />
     <ClInclude Include="gpu.h" />
     <ClInclude Include="mmu_listener.h" />

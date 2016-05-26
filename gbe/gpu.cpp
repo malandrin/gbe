@@ -1,4 +1,5 @@
 #include "base.h"
+#include "defines.h"
 #include "mmu.h"
 #include "gpu.h"
 
@@ -20,7 +21,7 @@ void GPU::OnMemoryWrittenU8(u16 _virtAddr, u8 _value)
     // IO registers
     switch(_virtAddr)
     {
-        case 0xFF47: // BG & Window Palette Data
+        case IOReg::BGP:
             mPalette[0] = (_value & 0b11);
             mPalette[1] = (_value >> 2) & 0b11;
             mPalette[2] = (_value >> 4) & 0b11;
@@ -29,7 +30,7 @@ void GPU::OnMemoryWrittenU8(u16 _virtAddr, u8 _value)
             break;
     }
 
-    if ((_virtAddr >= 0x8000) && (_virtAddr <= 0x9FFF))
+    if ((_virtAddr >= Memory::VRamStartAddr) && (_virtAddr <= Memory::VRamEndAddr))
     {
         mDirty = true;
     }

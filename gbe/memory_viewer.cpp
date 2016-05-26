@@ -1,6 +1,7 @@
 #include <imgui.h>
 #include <imgui_impl_sdl.h>
 #include "base.h"
+#include "defines.h"
 #include "mmu.h"
 #include "memory_viewer.h"
 
@@ -97,16 +98,16 @@ void MemoryViewer::CalculateMemInfo()
 							   mMmu.IsInBootableRom() ? mMemInfo[0].lineEnd : 0, string(" ROM")));
 
 	// vram
-	mMemInfo.push_back(MemInfo(mMmu.GetVRam(), MMU::VRamSize, 0x8000, mMemInfo[mMemInfo.size() - 1].lineEnd, string("VRAM")));
+	mMemInfo.push_back(MemInfo(mMmu.GetVRam(), MMU::VRamSize, Memory::VRamStartAddr, mMemInfo[mMemInfo.size() - 1].lineEnd, string("VRAM")));
 
 	// ram
-	mMemInfo.push_back(MemInfo(mMmu.GetRam(), MMU::RamSize, 0xC000, mMemInfo[mMemInfo.size() - 1].lineEnd, string(" RAM")));
+	mMemInfo.push_back(MemInfo(mMmu.GetRam(), MMU::RamSize, Memory::RamStartAddr, mMemInfo[mMemInfo.size() - 1].lineEnd, string(" RAM")));
 
 	// IO registers
-	mMemInfo.push_back(MemInfo(mMmu.GetIORegisters(), MMU::IORegistersSize, 0xFF00, mMemInfo[mMemInfo.size() - 1].lineEnd, string("IORG")));
+	mMemInfo.push_back(MemInfo(mMmu.GetIORegisters(), MMU::IORegistersSize, Memory::IORegsStartAddr, mMemInfo[mMemInfo.size() - 1].lineEnd, string("IORG")));
 
 	// high ram
-	mMemInfo.push_back(MemInfo(mMmu.GetHighRam(), MMU::HighRamSize, 0xFF80, mMemInfo[mMemInfo.size() - 1].lineEnd, string("HRAM")));
+	mMemInfo.push_back(MemInfo(mMmu.GetHighRam(), MMU::HighRamSize, Memory::HighRamStartAddr, mMemInfo[mMemInfo.size() - 1].lineEnd, string("HRAM")));
 
 	// ...
 	mAddrDigitCount = 0;

@@ -1,6 +1,7 @@
 #include <imgui.h>
 #include <imgui_impl_sdl.h>
 #include "base.h"
+#include "defines.h"
 #include "cpu.h"
 #include "mmu.h"
 #include "general_viewer.h"
@@ -36,7 +37,7 @@ void GeneralViewer::RenderStackWnd()
 		if (sp != 0)
 		{
 			float lineHeight = ImGui::GetTextLineHeight();
-			int lineTotalCount = (0xFFFE - sp) >> 1;
+			int lineTotalCount = (Memory::HighRamEndAddr - sp) >> 1;
 
 			ImGui::BeginChild("##stack_scrolling", ImVec2(0, 0));
 

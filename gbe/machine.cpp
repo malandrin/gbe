@@ -1,6 +1,7 @@
 #include <SDL.h>
 #include <SDL_opengl.h>
 #include "base.h"
+#include "defines.h"
 #include "gb.h"
 #include "cpu.h"
 #include "gpu.h"
@@ -11,7 +12,7 @@
 //--------------------------------------------
 Machine::Machine(GB& _gb) : mGb(_gb), mCpu(_gb.GetCpu())
 {
-	mWindow = SDL_CreateWindow("GBE", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, GPU::ScreenWidth << 1, GPU::ScreenHeight << 1, SDL_WINDOW_OPENGL);
+	mWindow = SDL_CreateWindow("GBE", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, Screen::Width << 1, Screen::Height << 1, SDL_WINDOW_OPENGL);
     mRenderer = SDL_CreateRenderer(mWindow, -1, SDL_RENDERER_ACCELERATED);
 }
 

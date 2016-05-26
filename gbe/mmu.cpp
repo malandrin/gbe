@@ -1,6 +1,7 @@
 #include <fstream>
 #include <memory.h>
 #include "base.h"
+#include "defines.h"
 #include "mmu.h"
 
 //--------------------------------------------
@@ -62,34 +63,34 @@ bool MMU::LoadRoms(const string &_bootableRom, const string &_cartridge)
 //--------------------------------------------
 u8* MMU::VirtAddrToPhysAddr(u16 _virtAddr) const
 {
-    if (mBootableRomEnabled && (_virtAddr >= 0x000) && (_virtAddr <= 0x00FF))
+    if (mBootableRomEnabled && (_virtAddr >= Memory::BootRomStartAddr) && (_virtAddr <= Memory::BootRomEndAddr))
     {
         return (u8*)&mBootableRom[_virtAddr];
     }
 
-    if ((_virtAddr >= 0x000) && (_virtAddr <= 0x3FFF))
+    if ((_virtAddr >= Memory::RomStartAddr) && (_virtAddr <= Memory::RomEndAddr))
     {
         return &mRom[_virtAddr];
     }
 
-    if ((_virtAddr >= 0x8000) && (_virtAddr <= 0x9FFF))
+    if ((_virtAddr >= Memory::VRamStartAddr) && (_virtAddr <= Memory::VRamEndAddr))
     {
-        return (u8*)&mVRam[_virtAddr - 0x8000];
+        return (u8*)&mVRam[_virtAddr - Memory::VRamStartAddr];
     }
 
-    if ((_virtAddr >= 0xC000) && (_virtAddr <= 0xDFFF))
+    if ((_virtAddr >= Memory::RamStartAddr) && (_virtAddr <= Memory::RamEndAddr))
     {
-        return (u8*)&mRam[_virtAddr - 0xC000];
+        return (u8*)&mRam[_virtAddr - Memory::RamStartAddr];
     }
 
-    if ((_virtAddr >= 0xFF00) && (_virtAddr <= 0xFF7F))
+    if ((_virtAddr >= Memory::IORegsStartAddr) && (_virtAddr <= Memory::IORegsEndAddr))
     {
-        return (u8*)&mIORegisters[_virtAddr - 0xFF00];
+        return (u8*)&mIORegisters[_virtAddr - Memory::IORegsStartAddr];
     }
 
-    if ((_virtAddr >= 0xFF80) && (_virtAddr <= 0xFFFE))
+    if ((_virtAddr >= Memory::HighRamStartAddr) && (_virtAddr <= Memory::HighRamEndAddr))
     {
-        return (u8*)&mHighRam[_virtAddr - 0xFF80];
+        return (u8*)&mHighRam[_virtAddr - Memory::HighRamStartAddr];
     }
 
     throw runtime_error("memory address unknown: " + Int2Hex(_virtAddr));

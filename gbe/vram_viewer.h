@@ -19,5 +19,6 @@ private:
     GLuint     mTextureId {0};
 
     void    BuildTileData   (u16 _addr);
+    void    BuildTileMap    (u16 _addrMap, u16 _addrTiles);
     void    RenderTile      (u16 _tileDataAddr, u8 _numTile, u8 _x, u8 _y);
 };
