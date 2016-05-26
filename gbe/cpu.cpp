@@ -14,17 +14,19 @@ void CPU::AddListener(ICpuListener *_listener)
 //--------------------------------------------
 // --
 //--------------------------------------------
-void CPU::Step()
+int CPU::Step()
 {
     try
     {
-        InternalStep();
+        return InternalStep();
     }
     catch(runtime_error &e)
     {
         cout << e.what() << '\n';
         exit(-1);
     }
+
+    return -1;
 }
 
 //--------------------------------------------
@@ -117,7 +119,7 @@ void CPU::RotateLeft(u8 &_reg)
 //--------------------------------------------
 // --
 //--------------------------------------------
-void CPU::InternalStep()
+int CPU::InternalStep()
 {
     u8 opcode = mMmu.ReadU8(mRegPC++);
 
@@ -444,8 +446,12 @@ void CPU::InternalStep()
     }
 
     // ...
+    int numCycles = 4;
+
     for each(auto l in mListeners)
-        l->OnStep();
+        l->OnStep(numCycles);
+
+    return numCycles;
 }
 
 //--------------------------------------------

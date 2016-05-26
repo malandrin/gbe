@@ -10,7 +10,7 @@ class CPU
 public:
 	CPU(MMU &_mmu) : mMmu(_mmu) {}
 
-	void Step();
+	int Step();
 
 	u8  GetRegA  () const { return mRegA; }
 	u8  GetRegB  () const { return mRegBC.b; }
@@ -85,7 +85,7 @@ private:
 	vector<ICpuListener*> mListeners;
 
 	void ProcessCb(u8 _opcode);
-	void InternalStep();
+	int  InternalStep();
 
 	void IncReg(u8 &_reg);
 	void DecReg(u8 &_reg);

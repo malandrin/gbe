@@ -10,10 +10,12 @@
 //--------------------------------------------
 // --
 //--------------------------------------------
-Machine::Machine(GB& _gb) : mGb(_gb), mCpu(_gb.GetCpu())
+Machine::Machine(GB& _gb) : mGb(_gb), mCpu(_gb.GetCpu()), mGpu(_gb.GetGpu())
 {
 	mWindow = SDL_CreateWindow("GBE", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, Screen::Width << 1, Screen::Height << 1, SDL_WINDOW_OPENGL);
     mRenderer = SDL_CreateRenderer(mWindow, -1, SDL_RENDERER_ACCELERATED);
+
+    mTexture = SDL_CreateTexture(mRenderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STREAMING, Screen::Width, Screen::Height);
 }
 
 //--------------------------------------------
@@ -28,10 +30,15 @@ Machine::~Machine()
 //--------------------------------------------
 // --
 //--------------------------------------------
-void Machine::Update()
+void Machine::Update(int _numCycles)
 {
 	if (!mCpu.IsOnDebugMode())
-	    mCpu.Step();
+    {
+        int nc = 0;
+
+        while (nc < _numCycles)
+	        nc += mCpu.Step();
+    }
 }
 
 //--------------------------------------------
@@ -39,9 +46,13 @@ void Machine::Update()
 //--------------------------------------------
 void Machine::Render()
 {
-    SDL_RenderClear(mRenderer); // TODO: quitar cuando se pinte la textura
+    SDL_RenderClear(mRenderer);
 
-    // TODO: copiar textura a pantalla
+    if (mGpu.IsLCDOn())
+    {
+        SDL_UpdateTexture(mTexture, nullptr, mGpu.GetFrameBuffer(), Screen::Width * 4);
+        SDL_RenderCopy(mRenderer, mTexture, nullptr, nullptr);
+    }
 
     SDL_RenderPresent(mRenderer);
 }

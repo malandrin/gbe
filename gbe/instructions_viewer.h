@@ -17,7 +17,7 @@ public:
 	void Render();
 
     // ICpuListener
-    void OnStep();
+    void OnStep(int _numCycles);
 
 private:
 

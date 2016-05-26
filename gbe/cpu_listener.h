@@ -5,7 +5,7 @@
 class ICpuListener
 {
 public:
-	virtual void OnStep() = 0;
+	virtual void OnStep(int _numCycles) = 0;
 };
 
 #endif

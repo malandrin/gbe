@@ -144,7 +144,6 @@ void VRAMViewer::RenderTile(u16 _tileDataAddr, u8 _numTile, u8 _x, u8 _y)
             u8 cp = (((b1 >> b) & 1) << 1) | ((b2 >> b) & 1);
             u32 c = sPalette[cp];
 
-            int p = ((_y + r) * 256) + _x + (7 - b);
             mTextureArray[((_y + r) * 256) + _x + (7 - b)] = c;
         }
     }

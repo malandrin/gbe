@@ -17,7 +17,7 @@ InstructionsViewer::InstructionsViewer(const MMU &_mmu, CPU &_cpu) : mMmu(_mmu),
 //--------------------------------------------
 // --
 //--------------------------------------------
-void InstructionsViewer::OnStep()
+void InstructionsViewer::OnStep(int _numCycles)
 {
     u16 pc = mCpu.GetRegPC();
     mPrevActiveLineIdx = mActiveLineIdx;

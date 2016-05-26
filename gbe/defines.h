@@ -35,7 +35,9 @@ namespace Memory
 
 namespace IOReg
 {
-    static const u16 SCY = 0xFF42; // Scroll Y
-    static const u16 SCX = 0xFF43; // Scroll X
-    static const u16 BGP = 0xFF47; // BG & Window Palette Data
+    static const u16 LCDC = 0xFF40; // LCD Control
+    static const u16 SCY = 0xFF42;  // Scroll Y
+    static const u16 SCX = 0xFF43;  // Scroll X
+    static const u16 LY = 0xFF44;   // LCDC Y Coordinate
+    static const u16 BGP = 0xFF47;  // BG & Window Palette Data
 }

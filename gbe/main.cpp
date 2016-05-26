@@ -37,24 +37,19 @@ int main(int argn, char *argv[])
 
 	if ((argn > 3) && (string(argv[3]) == "-debugger"))
 	{
-		debugger = unique_ptr<Debugger>(new Debugger(gb));
-		gb.GetCpu().Break();
+		//debugger = unique_ptr<Debugger>(new Debugger(gb));
+		//gb.GetCpu().Break();
 	}
 
 	// ...
 	SDL_Event event;
 	bool done = false;
-	Uint32 actTime = 0;
-	Uint32 prevTime = 0;
-	Uint32 delta = 0;
-	Uint32 timeToRender = 0;
+	Uint32 preTime = 0;
+    Uint32 emuTime = 0;
+    Uint32 msPerFrame = 17;
 
 	while(!done)
 	{
-		actTime = SDL_GetTicks();
-		delta = actTime - prevTime;
-		prevTime = actTime;
-
 		while(SDL_PollEvent(&event))
 		{
 			if ((((event.type == SDL_WINDOWEVENT) && (event.window.event == SDL_WINDOWEVENT_CLOSE))) || (event.type == SDL_QUIT))
@@ -68,23 +63,18 @@ int main(int argn, char *argv[])
 			}
 		}
 
-		machine.Update();
+        preTime = SDL_GetTicks();
+
+		machine.Update(70224);
         machine.Render();
 
+        emuTime = SDL_GetTicks() - preTime;
+
 		if (debugger != nullptr)
-		{
-			if (gb.GetCpu().IsOnDebugMode())
-				debugger->Render();
-			else
-			{
-				timeToRender += delta;
-				if (timeToRender >= 300)
-				{
-					debugger->Render();
-					timeToRender = 0;
-				}
-			}
-		}
+			debugger->Render();
+
+        if (emuTime < msPerFrame)
+            SDL_Delay(msPerFrame - emuTime);
 	}
 
 	SDL_Quit();
