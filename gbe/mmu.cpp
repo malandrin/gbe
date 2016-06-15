@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <fstream>
 #include <memory.h>
 #include "base.h"
@@ -14,6 +15,10 @@ MMU::MMU()
     fill_n(mBootableRom, BootableRomSize, 0);
     fill_n(mIORegisters, IORegistersSize, 0);
     fill_n(mHighRam, HighRamSize, 0);
+
+    mDummyListener = new MMUDummyListener();
+    mListeners[0] = mDummyListener;
+    mListeners[1] = mDummyListener;
 }
 
 //--------------------------------------------
@@ -22,9 +27,9 @@ MMU::MMU()
 MMU::~MMU()
 {
     if (mRom != nullptr)
-    {
         delete[] mRom;
-    }
+
+    delete mDummyListener;
 }
 
 //--------------------------------------------
@@ -32,7 +37,12 @@ MMU::~MMU()
 //--------------------------------------------
 void MMU::AddListener(IMmuListener* _listener)
 {
-    mListeners.push_back(_listener);
+    assert(mListeners[1] == mDummyListener);
+
+    if (mListeners[0] == mDummyListener)
+        mListeners[0] = _listener;
+    else
+        mListeners[1] = _listener;
 }
 
 //--------------------------------------------

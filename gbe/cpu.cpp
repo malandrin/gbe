@@ -1,3 +1,4 @@
+#include <assert.h>
 #include "base.h"
 #include "mmu.h"
 #include "cpu_listener.h"
@@ -6,9 +7,33 @@
 //--------------------------------------------
 // --
 //--------------------------------------------
+CPU::CPU(MMU &_mmu) : mMmu(_mmu)
+{
+    mDummyListener = new CPUDummyListener();
+
+    mListeners[0] = mDummyListener;
+    mListeners[1] = mDummyListener;
+}
+
+//--------------------------------------------
+// --
+//--------------------------------------------
+CPU::~CPU()
+{
+    delete mDummyListener;
+}
+
+//--------------------------------------------
+// --
+//--------------------------------------------
 void CPU::AddListener(ICpuListener *_listener)
 {
-    mListeners.push_back(_listener);
+    assert(mListeners[1] == mDummyListener);
+
+    if (mListeners[0] == mDummyListener)
+        mListeners[0] = _listener;
+    else 
+        mListeners[1] = _listener;
 }
 
 //--------------------------------------------
@@ -448,8 +473,8 @@ int CPU::InternalStep()
     // ...
     int numCycles = 4;
 
-    for each(auto l in mListeners)
-        l->OnStep(numCycles);
+    mListeners[0]->OnStep(numCycles);
+    mListeners[1]->OnStep(numCycles);
 
     return numCycles;
 }

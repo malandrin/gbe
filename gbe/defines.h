@@ -4,6 +4,16 @@ namespace Screen
 {
     static const u8 Width = 160;
     static const u8 Height = 144;
+    static const u8 TotalHeight = Height + 10; // 10 = hidden lines
+}
+
+namespace Cycles
+{
+    static const int PerFrame = 70224;
+    static const int PerHBlank = 204;
+    static const int PerScanline = 456;
+    static const int PerOAM = 80;
+    static const int PerVRAM = 172;
 }
 
 namespace Memory

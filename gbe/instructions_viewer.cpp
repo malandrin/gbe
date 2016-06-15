@@ -17,13 +17,22 @@ InstructionsViewer::InstructionsViewer(const MMU &_mmu, CPU &_cpu) : mMmu(_mmu),
 //--------------------------------------------
 // --
 //--------------------------------------------
+InstructionsViewer::~InstructionsViewer()
+{
+    if (mPCLineInfo != nullptr)
+        delete[] mPCLineInfo;
+}
+
+//--------------------------------------------
+// --
+//--------------------------------------------
 void InstructionsViewer::OnStep(int _numCycles)
 {
     u16 pc = mCpu.GetRegPC();
     mPrevActiveLineIdx = mActiveLineIdx;
-    mActiveLineIdx = mMapAddr2Line[pc];
+    mActiveLineIdx = mPCLineInfo[pc] >> 1;
 
-    if (mBreakpoints.find(mActiveLineIdx) != mBreakpoints.end())
+    if ((mPCLineInfo[pc] & 1) != 0)
         mCpu.Break();
 }
 
@@ -69,7 +78,7 @@ void InstructionsViewer::Render()
 			if (i == mSelectedLineIdx)
 				ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(0, screenPos.y), ImVec2(wndWidth, screenPos.y + lineHeight), ImColor(127, 127, 127, 255));
 
-			if (mBreakpoints.find(i) != mBreakpoints.end())
+            if ((mPCLineInfo[line->addr] & 1) != 0)
 				ImGui::GetWindowDrawList()->AddCircleFilled(ImVec2(15, screenPos.y + (lineHeight / 2.0f)), 5.0f, ImColor(255, 0, 0, 255));
 
             if (i == mActiveLineIdx)
@@ -95,7 +104,7 @@ void InstructionsViewer::Render()
 				if ((mousePos.x < wndWidth - style.ScrollbarSize - style.WindowPadding.x) &&
 					(mousePos.y >= screenPos.y) && (mousePos.y <= (screenPos.y + lineHeight - 1)))
 				{
-					ToggleBreakpoint(i);
+                    ToggleBreakpoint(line->addr);
 				}
             }
 			else if (ImGui::IsMouseClicked(0))
@@ -160,12 +169,14 @@ void InstructionsViewer::Render()
 //--------------------------------------------
 // --
 //--------------------------------------------
-void InstructionsViewer::ToggleBreakpoint(int _line)
+void InstructionsViewer::ToggleBreakpoint(u16 _addr)
 {
-	if (mBreakpoints.find(_line) != mBreakpoints.end())
-		mBreakpoints.erase(_line);
-	else
-		mBreakpoints.insert(_line);
+    u8 val = mPCLineInfo[_addr] & 1;
+
+    if (val == 0)
+        mPCLineInfo[_addr] |= 1;
+    else
+        mPCLineInfo[_addr] &= ~1;
 }
 
 //--------------------------------------------
@@ -173,10 +184,16 @@ void InstructionsViewer::ToggleBreakpoint(int _line)
 //--------------------------------------------
 void InstructionsViewer::CalculateInstructionLines()
 {
-	mInstructionLines.clear();
-    mMapAddr2Line.clear();
-
     int instrMemSize = mMmu.GetActiveRomSize();
+
+	mInstructionLines.clear();
+
+    if (mPCLineInfo != nullptr)
+        delete[] mPCLineInfo;
+
+    mPCLineInfo = new int[instrMemSize] {0};
+
+    // ...
     int i = 0;
 
     while(i < instrMemSize)
@@ -489,7 +506,7 @@ void InstructionsViewer::CalculateInstructionLines()
 				    break;
             }
 
-            mMapAddr2Line[addr] = mInstructionLines.size() - 1;
+            mPCLineInfo[addr] = (mInstructionLines.size() - 1) << 1;
         }
     }
 

@@ -4,6 +4,7 @@
 #include "base.h"
 #include "gb.h"
 #include "machine.h"
+#include "defines.h"
 #include "debugger.h"
 
 int main(int argn, char *argv[])
@@ -32,14 +33,15 @@ int main(int argn, char *argv[])
 	GB gb;
 	gb.PowerUp(argv[1], argv[2]);
 
-	Machine machine(gb);
 	unique_ptr<Debugger> debugger {nullptr};
 
 	if ((argn > 3) && (string(argv[3]) == "-debugger"))
 	{
-		//debugger = unique_ptr<Debugger>(new Debugger(gb));
-		//gb.GetCpu().Break();
+		debugger = unique_ptr<Debugger>(new Debugger(gb));
+		gb.GetCpu().Break();
 	}
+
+    Machine machine(gb);
 
 	// ...
 	SDL_Event event;
@@ -65,7 +67,7 @@ int main(int argn, char *argv[])
 
         preTime = SDL_GetTicks();
 
-		machine.Update(70224);
+		machine.Update(Cycles::PerFrame);
         machine.Render();
 
         emuTime = SDL_GetTicks() - preTime;

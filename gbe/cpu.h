@@ -2,13 +2,20 @@
 #ifndef _CPU_H
 #define _CPU_H
 
+#include "cpu_listener.h"
+
 class MMU;
-class ICpuListener;
+
+class CPUDummyListener : public ICpuListener
+{
+    void OnStep(int _numCycles) {};
+};
 
 class CPU
 {
 public:
-	CPU(MMU &_mmu) : mMmu(_mmu) {}
+	    CPU(MMU &_mmu);
+       ~CPU();
 
 	int Step();
 
@@ -82,7 +89,8 @@ private:
 
 	bool mOnDebugMode{false};
 
-	vector<ICpuListener*> mListeners;
+    ICpuListener* mListeners[2] {nullptr};
+    CPUDummyListener* mDummyListener {nullptr};
 
 	void ProcessCb(u8 _opcode);
 	int  InternalStep();

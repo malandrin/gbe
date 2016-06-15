@@ -2,6 +2,7 @@
 #include "defines.h"
 #include "mmu.h"
 #include "cpu.h"
+#include "defines.h"
 #include "gpu.h"
 
 static u32 mColors[4] {0x9BBC0F, 0x8BAC0F, 0x306230, 0x0F380F};
@@ -60,11 +61,11 @@ void GPU::OnStep(int _numCycles)
     switch(mMode)
     {
         case HBLANK:
-            if (mCycles >= 204)
+            if (mCycles >= Cycles::PerHBlank)
             {
-                int cl = mMmu.ReadU8(IOReg::LY) + 1;
+                u8 cl = mMmu.ReadU8(IOReg::LY) + 1;
 
-                if (cl >= 144)
+                if (cl >= Screen::Height)
                 {
                     SetMode(VBLANK);
                     UpdateFrameBuffer();
@@ -72,25 +73,36 @@ void GPU::OnStep(int _numCycles)
                 else
                     SetMode(OAM);
 
-                mMmu.WriteU8(IOReg::LY, (u8)cl);
+                mMmu.WriteU8(IOReg::LY, cl);
             }
             break;
 
         case VBLANK:
-            if (mCycles >= 4560) // 4560 = (204 + 80 + 127) * 10 lines
+            // 4560 = (204 + 80 + 127) * 10 lines
+            if (mCycles >= Cycles::PerScanline) 
             {
-                mMmu.WriteU8(IOReg::LY, 0);
-                SetMode(OAM);
+                u8 cl = mMmu.ReadU8(IOReg::LY) + 1;
+
+                if (cl > Screen::TotalHeight)
+                {
+                    SetMode(OAM);
+                    mMmu.WriteU8(IOReg::LY, 0);
+                }
+                else
+                {
+                    mMmu.WriteU8(IOReg::LY, cl);
+                    mCycles = 0;
+                }
             }
             break;
 
         case OAM:
-            if (mCycles >= 80)
+            if (mCycles >= Cycles::PerOAM)
                 SetMode(OAM_VRAM);
             break;
 
         case OAM_VRAM:
-            if (mCycles >= 172)
+            if (mCycles >= Cycles::PerVRAM)
                 SetMode(HBLANK);
             break;
     }

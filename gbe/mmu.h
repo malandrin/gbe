@@ -4,6 +4,12 @@
 
 #include "mmu_listener.h"
 
+class MMUDummyListener : public IMmuListener
+{
+    virtual void OnMemoryWrittenU8  (u16 _virtAdd, u8 _value) {}
+    virtual void OnMemoryWrittenU16 (u16 _virtAdd, u16 _value) {}
+};
+
 class MMU
 {
 public:
@@ -20,8 +26,8 @@ public:
     {
         *VirtAddrToPhysAddr(_virtAdd) = _value;
 
-        for each(auto l in mListeners)
-            l->OnMemoryWrittenU8(_virtAdd, _value);
+        mListeners[0]->OnMemoryWrittenU8(_virtAdd, _value);
+        mListeners[1]->OnMemoryWrittenU8(_virtAdd, _value);
     }
 
     inline u8 ReadU8(u16 _virtAdd) const
@@ -33,8 +39,8 @@ public:
     {
         (*(u16*)VirtAddrToPhysAddr(_virtAdd)) = _value;
 
-        for each(auto l in mListeners)
-            l->OnMemoryWrittenU16(_virtAdd, _value);
+        mListeners[0]->OnMemoryWrittenU16(_virtAdd, _value);
+        mListeners[1]->OnMemoryWrittenU16(_virtAdd, _value);
     }
 
     inline u16 ReadU16(u16 _virtAdd) const
@@ -74,7 +80,8 @@ private:
 	u8 *mRom {nullptr};
 	int mRomSize{0};
     bool mBootableRomEnabled {true};
-    vector<IMmuListener*> mListeners;
+    IMmuListener* mListeners[2] {nullptr};
+    MMUDummyListener* mDummyListener {nullptr};
 };
 
 #endif

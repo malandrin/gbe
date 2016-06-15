@@ -12,7 +12,8 @@ class InstructionsViewer : public ICpuListener
 {
 public:
 
-    InstructionsViewer(const MMU &_mmu, CPU &_cpu);
+     InstructionsViewer(const MMU &_mmu, CPU &_cpu);
+    ~InstructionsViewer();
 
 	void Render();
 
@@ -43,11 +44,10 @@ private:
     int                     mActiveLineIdx {0};
     int                     mPrevActiveLineIdx {0};
     int                     mAddrDigitCount;
-    unordered_set<int>      mBreakpoints;
-    map<u16, int>           mMapAddr2Line;
+    int                    *mPCLineInfo {nullptr};
 
 	void CalculateInstructionLines ();
-    void ToggleBreakpoint          (int _line);
+    void ToggleBreakpoint          (u16 _addr);
     void ProcessCb                 (u8 _opcode, u16 _addr);
 };
 
