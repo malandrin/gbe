@@ -6,6 +6,7 @@
 #include "machine.h"
 #include "defines.h"
 #include "debugger.h"
+#include "cpu_runnable.h"
 
 int main(int argn, char *argv[])
 {
@@ -50,6 +51,13 @@ int main(int argn, char *argv[])
     Uint32 emuTime = 0;
     Uint32 msPerFrame = 17;
 
+    ICPURunnable *cpuRunnable;
+    
+    if (debugger != nullptr) 
+        cpuRunnable = debugger.get();
+    else
+        cpuRunnable = &machine;
+
 	while(!done)
 	{
 		while(SDL_PollEvent(&event))
@@ -67,7 +75,7 @@ int main(int argn, char *argv[])
 
         preTime = SDL_GetTicks();
 
-		machine.Update(Cycles::PerFrame);
+        cpuRunnable->Update(Cycles::PerFrame);
         machine.Render();
 
         emuTime = SDL_GetTicks() - preTime;

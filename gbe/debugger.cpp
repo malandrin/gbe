@@ -9,7 +9,7 @@
 //--------------------------------------------
 // --
 //--------------------------------------------
-Debugger::Debugger(GB& gb) : mMemoryViewer(gb.GetMmu()), mInstructionsViewer(gb.GetMmu(), gb.GetCpu()), mGeneralViewer(gb.GetCpu(), gb.GetMmu()), mVRamViewer(gb.GetMmu())
+Debugger::Debugger(GB& gb) : mMemoryViewer(gb.GetMmu()), mInstructionsViewer(gb.GetMmu(), gb.GetCpu(), *this), mGeneralViewer(gb.GetCpu(), gb.GetMmu()), mVRamViewer(gb.GetMmu()), mCpu(gb.GetCpu())
 {
 	mWindow = SDL_CreateWindow("GBE Debugger", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1024, 768, SDL_WINDOW_OPENGL);
 	mContext = SDL_GL_CreateContext(mWindow);
@@ -43,6 +43,29 @@ void Debugger::HandleEvent(SDL_Event& _event)
 //--------------------------------------------
 // --
 //--------------------------------------------
+void Debugger::Update(int _numCycles)
+{
+    if (mCpu.IsOnDebugMode())
+        return;
+
+    if (mNumCyclesToExecute <= 0)
+        mNumCyclesToExecute = _numCycles;
+
+    while (mNumCyclesToExecute > 0)
+    {
+        mNumCyclesToExecute -= mCpu.Step();
+
+        if (mInstructionsViewer.OnStep())
+        {
+            Break();
+            break;
+        }
+    }
+}
+
+//--------------------------------------------
+// --
+//--------------------------------------------
 void Debugger::Render()
 {
 	ImGui_ImplSdl_NewFrame(mWindow);
@@ -60,4 +83,29 @@ void Debugger::Render()
 
 	ImGui::Render();
 	SDL_GL_SwapWindow(mWindow);
+}
+
+//--------------------------------------------
+// --
+//--------------------------------------------
+void Debugger::Break()
+{
+    mCpu.Break();
+}
+
+//--------------------------------------------
+// --
+//--------------------------------------------
+void Debugger::Continue()
+{
+    mCpu.Continue();
+}
+
+//--------------------------------------------
+// --
+//--------------------------------------------
+void Debugger::Step()
+{
+    mNumCyclesToExecute -= mCpu.Step();
+    mInstructionsViewer.OnStep();
 }

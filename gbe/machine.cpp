@@ -32,13 +32,10 @@ Machine::~Machine()
 //--------------------------------------------
 void Machine::Update(int _numCycles)
 {
-	if (!mCpu.IsOnDebugMode())
-    {
-        int nc = 0;
+    int nc = 0;
 
-        while (nc < _numCycles)
-	        nc += mCpu.Step();
-    }
+    while (nc < _numCycles)
+	    nc += mCpu.Step();
 }
 
 //--------------------------------------------

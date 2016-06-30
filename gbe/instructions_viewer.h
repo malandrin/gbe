@@ -2,23 +2,22 @@
 #ifndef _INSTRUCTIONS_VIEWER_H
 #define _INSTRUCTIONS_VIEWER_H
 
-#include "cpu_listener.h"
 #include "rom_walker.h"
 
 class MMU;
 class CPU;
+class Debugger;
 
-class InstructionsViewer : public ICpuListener
+class InstructionsViewer
 {
 public:
 
-     InstructionsViewer(const MMU &_mmu, CPU &_cpu);
+     InstructionsViewer(const MMU &_mmu, CPU &_cpu, Debugger &_debugger);
     ~InstructionsViewer();
 
 	void Render();
 
-    // ICpuListener
-    void OnStep(int _numCycles);
+    bool OnStep();
 
 private:
 
@@ -45,6 +44,7 @@ private:
     int                     mPrevActiveLineIdx {0};
     int                     mAddrDigitCount;
     int                    *mPCLineInfo {nullptr};
+    Debugger               &mDebugger;
 
 	void CalculateInstructionLines ();
     void ToggleBreakpoint          (u16 _addr);

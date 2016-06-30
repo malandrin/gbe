@@ -2,9 +2,10 @@
 #ifndef _MACHINE_H
 #define _MACHINE_H
 
+#include "cpu_runnable.h"
 class GB;
 
-class Machine
+class Machine : public ICPURunnable
 {
 public:
 	Machine(GB& _gb);

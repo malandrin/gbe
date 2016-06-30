@@ -1,5 +1,6 @@
 #pragma once
 
+#include <SDL_opengl.h>
 class MMU;
 
 class VRAMViewer

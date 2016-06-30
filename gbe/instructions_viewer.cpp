@@ -3,15 +3,15 @@
 #include "base.h"
 #include "mmu.h"
 #include "cpu.h"
+#include "debugger.h"
 #include "instructions_viewer.h"
 
 //--------------------------------------------
 // --
 //--------------------------------------------
-InstructionsViewer::InstructionsViewer(const MMU &_mmu, CPU &_cpu) : mMmu(_mmu), mCpu(_cpu), mROMWalker(_mmu.GetActiveRom(), _mmu.GetActiveRomSize(), _mmu.GetActiveRomEntryAddr())
+InstructionsViewer::InstructionsViewer(const MMU &_mmu, CPU &_cpu, Debugger &_debugger) : mMmu(_mmu), mCpu(_cpu), mROMWalker(_mmu.GetActiveRom(), _mmu.GetActiveRomSize(), _mmu.GetActiveRomEntryAddr()), mDebugger(_debugger)
 {
     CalculateInstructionLines();
-	mCpu.AddListener(this);
 }
 
 //--------------------------------------------
@@ -26,14 +26,16 @@ InstructionsViewer::~InstructionsViewer()
 //--------------------------------------------
 // --
 //--------------------------------------------
-void InstructionsViewer::OnStep(int _numCycles)
+bool InstructionsViewer::OnStep()
 {
     u16 pc = mCpu.GetRegPC();
     mPrevActiveLineIdx = mActiveLineIdx;
     mActiveLineIdx = mPCLineInfo[pc] >> 1;
 
     if ((mPCLineInfo[pc] & 1) != 0)
-        mCpu.Break();
+        return true;
+
+    return false;
 }
 
 //--------------------------------------------
@@ -150,16 +152,16 @@ void InstructionsViewer::Render()
         if (mCpu.IsOnDebugMode())
         {
     		if (ImGui::Button("Step"))
-    			mCpu.Step();
+    			mDebugger.Step();
 
             ImGui::SameLine();
             if (ImGui::Button("Continue"))
-                mCpu.Continue();
+                mDebugger.Continue();
         }
         else
         {
             if (ImGui::Button("Break"))
-                mCpu.Break();
+                mDebugger.Break();
         }
     }
 

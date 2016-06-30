@@ -147,6 +147,7 @@ void CPU::RotateLeft(u8 &_reg)
 int CPU::InternalStep()
 {
     u8 opcode = mMmu.ReadU8(mRegPC++);
+    int numCycles = 4;
 
     switch(opcode)
     {
@@ -155,6 +156,7 @@ int CPU::InternalStep()
 
         case 0x03: // INC BC
             ++mRegBC.bc;
+            numCycles = 8;
             break;
 
         case 0x04: // INC B
@@ -167,15 +169,18 @@ int CPU::InternalStep()
 
         case 0x06: // LD B, n
             mRegBC.b = mMmu.ReadU8(mRegPC++);
+            numCycles = 8;
             break;
 
         case 0x08: // LD (nn), SP
             mMmu.WriteU16(mMmu.ReadU16(mRegPC), mRegSP);
             mRegPC += 2;
+            numCycles = 20;
             break;
 
         case 0x0B: // DEC BC
             --mRegBC.bc;
+            numCycles = 8;
             break;
 
         case 0x0C: // INC C
@@ -188,15 +193,18 @@ int CPU::InternalStep()
 
         case 0x0E: // LD C, n
             mRegBC.c = mMmu.ReadU8(mRegPC++);
+            numCycles = 8;
             break;
 
         case 0x11: // LD DE, nn
             mRegDE.de = mMmu.ReadU16(mRegPC);
             mRegPC += 2;
+            numCycles = 12;
             break;
 
         case 0x13: // INC DE
             ++mRegDE.de;
+            numCycles = 8;
             break;
 
         case 0x15: // DEC D
@@ -205,6 +213,7 @@ int CPU::InternalStep()
 
         case 0x16: // LD D, n
             mRegDE.d = mMmu.ReadU8(mRegPC++);
+            numCycles = 8;
             break;
 
         case 0x17: // RLA
@@ -215,11 +224,13 @@ int CPU::InternalStep()
         {
             i8 offset = (i8)mMmu.ReadU8(mRegPC++);
             mRegPC += offset;
+            numCycles = 12;
         }
         break;
 
         case 0x1A: // LD A, (DE)
             mRegA = mMmu.ReadU8(mRegDE.de);
+            numCycles = 8;
             break;
 
         case 0x1C: // INC E
@@ -232,6 +243,7 @@ int CPU::InternalStep()
 
         case 0x1E: // LD E, n
             mRegDE.e = mMmu.ReadU8(mRegPC++);
+            numCycles = 8;
             break;
 
         case 0x20: // JR NZ, r8
@@ -240,20 +252,25 @@ int CPU::InternalStep()
 
 			if (!mFlagZ)
 				mRegPC += offset;
+
+            numCycles = 8;
 		}
         break;
 
         case 0x21: // LD HL, nn
 			mRegHL.hl = mMmu.ReadU16(mRegPC);
 			mRegPC += 2;
+            numCycles = 12;
             break;
 
         case 0x22: // LD (HL+), A
             mMmu.WriteU8(mRegHL.hl++, mRegA);
+            numCycles = 8;
             break;
 
         case 0x23: // INC HL
             ++mRegHL.hl;
+            numCycles = 8;
             break;
 
         case 0x24: // INC H
@@ -266,24 +283,30 @@ int CPU::InternalStep()
 
             if (mFlagZ)
                 mRegPC += offset;
+
+            numCycles = 8;
         }
         break;
 
         case 0x2E: // LD L, n
             mRegHL.l = mMmu.ReadU8(mRegPC++);
+            numCycles = 8;
             break;
 
         case 0x31: // LD SP, nn
             mRegSP = mMmu.ReadU16(mRegPC);
 			mRegPC += 2;
+            numCycles = 12;
             break;
 
         case 0x32: // LD (HL-), A
 			mMmu.WriteU8(mRegHL.hl--, mRegA);
+            numCycles = 8;
 	        break;
 
         case 0x33: // INC SP
             ++mRegSP;
+            numCycles = 8;
             break;
 
         case 0x3C: // INC A
@@ -296,6 +319,7 @@ int CPU::InternalStep()
 
         case 0x3E: // LD A, n
             mRegA = mMmu.ReadU8(mRegPC++);
+            numCycles = 8;
             break;
 
         case 0x42: // LD B, D
@@ -316,6 +340,7 @@ int CPU::InternalStep()
 
         case 0x66: // LD H, (HL)
             mRegHL.h = mMmu.ReadU8(mRegHL.hl);
+            numCycles = 8;
             break;
 
         case 0x67: // LD H, A
@@ -324,14 +349,17 @@ int CPU::InternalStep()
 
         case 0x6E: // LD L, (HL)
             mRegHL.l = mMmu.ReadU8(mRegHL.hl);
+            numCycles = 8;
             break;
 
         case 0x73: // LD (HL), E
             mMmu.WriteU8(mRegHL.hl, mRegDE.e);
+            numCycles = 8;
             break;
 
         case 0x77: // LD (HL), A
             mMmu.WriteU8(mRegHL.hl, mRegA);
+            numCycles = 8;
             break;
 
         case 0x78: // LD A, B
@@ -356,6 +384,7 @@ int CPU::InternalStep()
 
         case 0x86: // ADD A, (HL)
             AddRegA(mMmu.ReadU8(mRegHL.hl));
+            numCycles = 8;
             break;
 
         case 0x88: // ADC A, B
@@ -400,22 +429,26 @@ int CPU::InternalStep()
 
         case 0xBE: // CP (HL)
             CpRegA(mMmu.ReadU8(mRegHL.hl));
+            numCycles = 8;
             break;
 
         case 0xC1: // POP BC
             mRegBC.bc = Pop();
+            numCycles = 12;
             break;
 
         case 0xC5: // PUSH BC
             Push(mRegBC.bc);
+            numCycles = 16;
             break;
 
         case 0xC9: // RET
             mRegPC = Pop();
+            numCycles = 16;
             break;
 
         case 0xCB: // CB
-            ProcessCb(mMmu.ReadU8(mRegPC++));
+            numCycles = ProcessCb(mMmu.ReadU8(mRegPC++));
             break;
 
         case 0xCC: // CALL Z, nn
@@ -427,42 +460,51 @@ int CPU::InternalStep()
                 Push(mRegPC);
                 mRegPC = dst;
             }
+            numCycles = 12;
         }
         break;
 
         case 0xCD: // CALL nn
             Push(mRegPC + 2);
             mRegPC = mMmu.ReadU16(mRegPC);
+            numCycles = 14;
             break;
 
         case 0xCE: // ADC A, n
             AddRegA(mMmu.ReadU8(mRegPC++) + (mFlagC ? 1 : 0));
+            numCycles = 8;
             break;
 
         case 0xD9: // RETI
             mRegPC = Pop();
+            numCycles = 16;
             // TODO: ACTIVAR INTERRUPCIONES
             break;
 
         case 0xE0: // LD (0xFF00 + n), A
             mMmu.WriteU8(0xFF00 + mMmu.ReadU8(mRegPC++), mRegA);
+            numCycles = 12;
             break;
 
         case 0xE2: // LD (0xFF00 + C), A
             mMmu.WriteU8(0xFF00 + mRegBC.c, mRegA);
+            numCycles = 8;
             break;
 
         case 0xEA: // LD (nn), A
             mMmu.WriteU8(mMmu.ReadU16(mRegPC), mRegA);
             mRegPC += 2;
+            numCycles = 16;
             break;
 
         case 0xF0: // LD A, (0xFF00 + n)
             mRegA = mMmu.ReadU8(0xFF00 + mMmu.ReadU8(mRegPC++));
+            numCycles = 12;
             break;
 
         case 0xFE: // CP n
             CpRegA(mMmu.ReadU8(mRegPC++));
+            numCycles = 8;
             break;
 
         default:
@@ -471,8 +513,6 @@ int CPU::InternalStep()
     }
 
     // ...
-    int numCycles = 4;
-
     mListeners[0]->OnStep(numCycles);
     mListeners[1]->OnStep(numCycles);
 
@@ -482,8 +522,10 @@ int CPU::InternalStep()
 //--------------------------------------------
 // --
 //--------------------------------------------
-void CPU::ProcessCb(u8 _opcode)
+int CPU::ProcessCb(u8 _opcode)
 {
+    int numCycles = 8;
+
     switch(_opcode)
     {
         case 0x11: // RL C
@@ -504,6 +546,8 @@ void CPU::ProcessCb(u8 _opcode)
             throw runtime_error("CB opcode unknown: " + Int2Hex(_opcode));
             break;
     }
+
+    return numCycles;
 }
 
 //--------------------------------------------

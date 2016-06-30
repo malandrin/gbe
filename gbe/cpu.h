@@ -92,7 +92,7 @@ private:
     ICpuListener* mListeners[2] {nullptr};
     CPUDummyListener* mDummyListener {nullptr};
 
-	void ProcessCb(u8 _opcode);
+	int ProcessCb(u8 _opcode);
 	int  InternalStep();
 
 	void IncReg(u8 &_reg);
