@@ -214,7 +214,11 @@ void InstructionsViewer::CalculateInstructionLines()
                 ++i;
             }
             else
-                mInstructionLines.push_back(InstructionLine(addr, OpcodesInfo::primary[opcode].bytesLength, OpcodesInfo::primary[opcode].asmCode(mGb, i)));
+            {
+                u8 bl = OpcodesInfo::primary[opcode].bytesLength;
+                mInstructionLines.push_back(InstructionLine(addr, bl, OpcodesInfo::primary[opcode].asmCode(mGb, i)));
+                i += bl - 1;
+            }
 
             mPCLineInfo[addr] = (mInstructionLines.size() - 1) << 1;
         }
