@@ -4,15 +4,13 @@
 
 #include "rom_walker.h"
 
-class MMU;
-class CPU;
 class Debugger;
 
 class InstructionsViewer
 {
 public:
 
-     InstructionsViewer(const MMU &_mmu, CPU &_cpu, Debugger &_debugger);
+     InstructionsViewer(GB &_gb, Debugger &_debugger);
     ~InstructionsViewer();
 
 	void Render();
@@ -35,8 +33,7 @@ private:
         string asmCode;
     };
 
-    const MMU               &mMmu;
-    CPU                     &mCpu;
+    GB                      &mGb;
     ROMWalker               mROMWalker;
     vector<InstructionLine> mInstructionLines;
     int                     mSelectedLineIdx {-1};
@@ -48,7 +45,6 @@ private:
 
 	void CalculateInstructionLines ();
     void ToggleBreakpoint          (u16 _addr);
-    void ProcessCb                 (u8 _opcode, u16 _addr);
 };
 
 #endif

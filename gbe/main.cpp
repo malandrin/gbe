@@ -10,10 +10,10 @@
 
 int main(int argn, char *argv[])
 {
-	if (argn < 3)
+	if (argn < 2)
 	{
 		cout << "Invalid number of arguments!" << endl;
-		cout << "Syntax: gbe.exe bootable_rom rom [-debugger]";
+		cout << "Syntax: gbe.exe rom [-debugger] [-boot_rom:file]";
 		return -1;
 	}
 
@@ -30,13 +30,28 @@ int main(int argn, char *argv[])
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 
+    // ...
+    string bootRom = "";
+    bool   debuggerActive = false;
+
+    for (int i = 2; i < argn; ++i)
+    {
+        string sa = string(argv[i]);
+
+        // todo: add error checking
+        if (sa == "-debugger")
+            debuggerActive = true;
+        else if (sa.find("-boot_rom") != -1)
+            bootRom = sa.substr(sa.find("-boot_rom") + 10);
+    }
+
 	// ...
 	GB gb;
-	gb.PowerUp(argv[1], argv[2]);
+	gb.PowerUp(argv[1], bootRom);
 
 	unique_ptr<Debugger> debugger {nullptr};
 
-	if ((argn > 3) && (string(argv[3]) == "-debugger"))
+	if (debuggerActive)
 	{
 		debugger = unique_ptr<Debugger>(new Debugger(gb));
 		gb.GetCpu().Break();
@@ -51,7 +66,7 @@ int main(int argn, char *argv[])
     Uint32 emuTime = 0;
     Uint32 msPerFrame = 17;
 
-    ICPURunnable *cpuRunnable;
+    ICpuRunnable *cpuRunnable;
     
     if (debugger != nullptr) 
         cpuRunnable = debugger.get();

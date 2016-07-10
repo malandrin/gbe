@@ -5,7 +5,7 @@
 #include "cpu_runnable.h"
 class GB;
 
-class Machine : public ICPURunnable
+class Machine : public ICpuRunnable
 {
 public:
 	Machine(GB& _gb);

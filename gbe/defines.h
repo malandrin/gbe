@@ -24,6 +24,9 @@ namespace Memory
     static const u16 RomStartAddr = 0x0000;
     static const u16 RomEndAddr = 0x3FFF;
 
+    static const u16 RomBankNStartAddr = 0x4000;
+    static const u16 RomBankNEndAddr = 0x7FFF;
+
     static const u16 VRamStartAddr = 0x8000;
     static const u16 VRamEndAddr = 0x9FFF;
 
@@ -41,6 +44,8 @@ namespace Memory
 
     static const u16 HighRamStartAddr = 0xFF80;
     static const u16 HighRamEndAddr = 0xFFFE;
+
+    static const u16 InterruptsEnableRegister = 0xFFFF;
 }
 
 namespace IOReg

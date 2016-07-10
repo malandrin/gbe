@@ -55,7 +55,7 @@ public:
     const u8* GetIORegisters() const { return mIORegisters; }
     const u8* GetHighRam() const { return mHighRam; }
 
-	bool LoadRoms   (const string& _bootableRom, const string& _cartridge);
+	bool LoadRoms   (const string& _cartridge, const string &_bootRom);
 
 	int  GetRomSize () const {return mRomSize;}
 
@@ -65,6 +65,8 @@ public:
 
     bool IsInBootableRom     () const {return mBootableRomEnabled;}
     void DisableBootableRom  () {mBootableRomEnabled = false;}
+
+    void SetStateAfterBoot  ();
 
     void AddListener (IMmuListener* _listener);
 
@@ -78,6 +80,7 @@ private:
     u8 mIORegisters[IORegistersSize];
     u8 mHighRam[HighRamSize];
 	u8 *mRom {nullptr};
+    u8 mIER { 0 }; // Interrups Enable Register
 	int mRomSize{0};
     bool mBootableRomEnabled {true};
     IMmuListener* mListeners[2] {nullptr};

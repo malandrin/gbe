@@ -1,15 +1,13 @@
 #include "base.h"
+#include "opcodes_info.h"
 #include "rom_walker.h"
-
-static unordered_set<u8> s2byteInstructions { 0x06, 0x0E, 0x16, 0x18, 0x1E, 0x20, 0x28, 0x2E, 0x3E, 0xE0, 0xF0, 0xFE };
-static unordered_set<u8> s3byteInstructions { 0x08, 0x11, 0x21, 0x31, 0xCC, 0xCD, 0xEA };
 
 //--------------------------------------------
 // --
 //--------------------------------------------
 ROMWalker::ROMWalker(const u8* _rom, int _romSize, u16 _addr) : mRom(_rom), mRomSize(_romSize)
 {
-    Analyze(_addr);
+    //Analyze(_addr);
 }
 
 //--------------------------------------------
@@ -48,83 +46,70 @@ void ROMWalker::AnalyzePath(u16 _addr)
 
     while((pc < mRomSize) && !exit)
     {
+        mCode.insert(pc);
         u8 opcode = mRom[pc++];
 
-        // ...
-        mCode.insert(pc - 1);
-
-        switch(opcode)
+        if (opcode == 0xCB)
+            pc += 1;
+        else
         {
-            case 0x18: // JR r8
-                pc += (i8)mRom[pc++];
-                exit = mCode.find(pc) != mCode.end();
-                break;
-
-            case 0x20: // JR NZ, r8
-            case 0x28: // JR Z, r8
+            switch(OpcodesInfo::primary[opcode].jumpType)
             {
-                u16 dst = (i8)mRom[pc++];
-                dst += pc;
+                case OpcodesInfo::JumpI8:
+                    pc += (i8)mRom[pc++];
+                    exit = mCode.find(pc) != mCode.end();
+                    break;
 
-                if (mCode.find(dst) == mCode.end())
-                    mPaths.push_back(dst);
-            }
-            break;
-
-            case 0xC9: // RET
-            case 0xD9: // RETI
-                pc = stack.back();
-                stack.pop_back();
-                break;
-
-            case 0xCB: // CB
-                pc += 1;
-                break;
-
-            case 0xCC: // CALL Z, nn
-            {
-                u16 dst = *((u16*)&mRom[pc]);
-
-                if (mCode.find(dst) == mCode.end())
-                    mPaths.push_back(dst);
-
-                pc += 2;
-                if (mCode.find(pc) == mCode.end())
-                    stack.push_back(pc);
-                else
-                    exit = true;
-            }
-            break;
-
-            case 0xCD: // CALL nn
-            {
-                u16 dst = *((u16*)&mRom[pc]);
-
-                if (mCode.find(dst) == mCode.end())
+                case OpcodesInfo::JumpCondI8:
                 {
-                    stack.push_back(pc + 2);
-                    pc = dst;
-                }
-            }
-            break;
+                    u16 dst = (i8)mRom[pc++] + pc + 1;
 
-            default:
-                pc += GetInstructionSize(opcode);
+                    if (mCode.find(dst) == mCode.end())
+                        mPaths.push_back(dst);
+                }
                 break;
+
+                case OpcodesInfo::JumpU16:
+                    pc = (u16)mRom[pc++];
+                    exit = mCode.find(pc) != mCode.end();
+                    break;
+
+                case OpcodesInfo::Ret:
+                    pc = stack.back();
+                    stack.pop_back();
+                    break;
+
+                case OpcodesInfo::CallCond:
+                {
+                    u16 dst = *((u16*)&mRom[pc]);
+
+                    if (mCode.find(dst) == mCode.end())
+                        mPaths.push_back(dst);
+
+                    pc += 2;
+                    if (mCode.find(pc) == mCode.end())
+                        stack.push_back(pc);
+                    else
+                        exit = true;
+                }
+                break;
+
+                case OpcodesInfo::Call:
+                {
+                    u16 dst = *((u16*)&mRom[pc]);
+
+                    if (mCode.find(dst) == mCode.end())
+                    {
+                        stack.push_back(pc + 2);
+                        pc = dst;
+                    }
+                }
+                break;
+
+                default:
+                    pc += OpcodesInfo::primary[opcode].bytesLength - 1;
+                    break;
+            }
         }
     }
-}
-
-//--------------------------------------------
-// --
-//--------------------------------------------
-u8 ROMWalker::GetInstructionSize(u8 _opcode)
-{
-    if (s2byteInstructions.find(_opcode) != s2byteInstructions.end())
-        return 1;
-
-    if (s3byteInstructions.find(_opcode) != s3byteInstructions.end())
-        return 2;
-
-    return 0;
 }

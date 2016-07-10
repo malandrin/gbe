@@ -48,11 +48,14 @@ void MMU::AddListener(IMmuListener* _listener)
 //--------------------------------------------
 // --
 //--------------------------------------------
-bool MMU::LoadRoms(const string &_bootableRom, const string &_cartridge)
+bool MMU::LoadRoms(const string &_cartridge, const string &_bootRom )
 {
-    ifstream bootable(_bootableRom, ios::binary);
-    bootable.read((char*)mBootableRom, 256);
-    bootable.close();
+    if (_bootRom != "")
+    {
+        ifstream bootable(_bootRom, ios::binary);
+        bootable.read((char*)mBootableRom, 256);
+        bootable.close();
+    }
 
     // ...
     ifstream cartridge(_cartridge, ios::binary);
@@ -71,37 +74,71 @@ bool MMU::LoadRoms(const string &_bootableRom, const string &_cartridge)
 //--------------------------------------------
 // --
 //--------------------------------------------
+void MMU::SetStateAfterBoot()
+{
+    WriteU8(0xFF05, 0x00);
+    WriteU8(0xFF06, 0x00);
+    WriteU8(0xFF07, 0x00);
+    WriteU8(0xFF10, 0x80);
+    WriteU8(0xFF11, 0xBF);
+    WriteU8(0xFF12, 0xF3);
+    WriteU8(0xFF14, 0xBF);
+    WriteU8(0xFF16, 0x3F);
+    WriteU8(0xFF17, 0x00);
+    WriteU8(0xFF19, 0xBF);
+    WriteU8(0xFF1A, 0x7F);
+    WriteU8(0xFF1B, 0xFF);
+    WriteU8(0xFF1C, 0x9F);
+    WriteU8(0xFF1E, 0xBF);
+    WriteU8(0xFF20, 0xFF);
+    WriteU8(0xFF21, 0x00);
+    WriteU8(0xFF22, 0x00);
+    WriteU8(0xFF23, 0xBF);
+    WriteU8(0xFF24, 0x77);
+    WriteU8(0xFF25, 0xF3);
+    WriteU8(0xFF26, 0xF1);
+    WriteU8(0xFF40, 0x91);
+    WriteU8(0xFF42, 0x00);
+    WriteU8(0xFF43, 0x00);
+    WriteU8(0xFF45, 0x00);
+    WriteU8(0xFF47, 0xFC);
+    WriteU8(0xFF48, 0xFF);
+    WriteU8(0xFF49, 0xFF);
+    WriteU8(0xFF4A, 0x00);
+    WriteU8(0xFF4B, 0x00);
+    WriteU8(0xFFFF, 0x00);
+
+    mBootableRomEnabled = false;
+}
+
+//--------------------------------------------
+// --
+//--------------------------------------------
 u8* MMU::VirtAddrToPhysAddr(u16 _virtAddr) const
 {
     if (mBootableRomEnabled && (_virtAddr >= Memory::BootRomStartAddr) && (_virtAddr <= Memory::BootRomEndAddr))
-    {
         return (u8*)&mBootableRom[_virtAddr];
-    }
 
     if ((_virtAddr >= Memory::RomStartAddr) && (_virtAddr <= Memory::RomEndAddr))
-    {
         return &mRom[_virtAddr];
-    }
+
+    if ((_virtAddr >= Memory::RomBankNStartAddr) && (_virtAddr <= Memory::RomBankNEndAddr))
+        return &mRom[_virtAddr];
 
     if ((_virtAddr >= Memory::VRamStartAddr) && (_virtAddr <= Memory::VRamEndAddr))
-    {
         return (u8*)&mVRam[_virtAddr - Memory::VRamStartAddr];
-    }
 
     if ((_virtAddr >= Memory::RamStartAddr) && (_virtAddr <= Memory::RamEndAddr))
-    {
         return (u8*)&mRam[_virtAddr - Memory::RamStartAddr];
-    }
 
     if ((_virtAddr >= Memory::IORegsStartAddr) && (_virtAddr <= Memory::IORegsEndAddr))
-    {
         return (u8*)&mIORegisters[_virtAddr - Memory::IORegsStartAddr];
-    }
 
     if ((_virtAddr >= Memory::HighRamStartAddr) && (_virtAddr <= Memory::HighRamEndAddr))
-    {
         return (u8*)&mHighRam[_virtAddr - Memory::HighRamStartAddr];
-    }
+
+    if (_virtAddr == Memory::InterruptsEnableRegister)
+        return (u8*)&mIER;
 
     throw runtime_error("memory address unknown: " + Int2Hex(_virtAddr));
 }

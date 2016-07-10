@@ -40,6 +40,8 @@ public:
 	void Break		   () { mOnDebugMode = true; }
 	void Continue	   () { mOnDebugMode = false; }
 
+    void SetStateAfterBoot  ();
+
 	void AddListener (ICpuListener *_listener);
 
 private:

@@ -1,6 +1,6 @@
 #pragma once
 
-class ICPURunnable
+class ICpuRunnable
 {
 public:
 

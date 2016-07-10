@@ -11,7 +11,7 @@
 
 class GB;
 
-class Debugger : public ICPURunnable
+class Debugger : public ICpuRunnable
 {
 public:
 	     Debugger       (GB& _gb);

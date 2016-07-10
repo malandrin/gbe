@@ -9,7 +9,7 @@
 //--------------------------------------------
 // --
 //--------------------------------------------
-Debugger::Debugger(GB& gb) : mMemoryViewer(gb.GetMmu()), mInstructionsViewer(gb.GetMmu(), gb.GetCpu(), *this), mGeneralViewer(gb.GetCpu(), gb.GetMmu()), mVRamViewer(gb.GetMmu()), mCpu(gb.GetCpu())
+Debugger::Debugger(GB& gb) : mMemoryViewer(gb.GetMmu()), mInstructionsViewer(gb, *this), mGeneralViewer(gb.GetCpu(), gb.GetMmu()), mVRamViewer(gb.GetMmu()), mCpu(gb.GetCpu())
 {
 	mWindow = SDL_CreateWindow("GBE Debugger", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1024, 768, SDL_WINDOW_OPENGL);
 	mContext = SDL_GL_CreateContext(mWindow);

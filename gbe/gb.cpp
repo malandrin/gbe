@@ -6,11 +6,17 @@
 //--------------------------------------------
 // --
 //--------------------------------------------
-void GB::PowerUp(const string &_bootableRom, const string &_cartridge)
+void GB::PowerUp(const string &_cartridge, const string &_bootRom)
 {
     try
     {
-        mMmu.LoadRoms(_bootableRom, _cartridge);
+        mMmu.LoadRoms(_cartridge, _bootRom);
+
+        if (_bootRom == "")
+        {
+            mCpu.SetStateAfterBoot();
+            mMmu.SetStateAfterBoot();
+        }
     }
     catch(runtime_error &e)
     {
