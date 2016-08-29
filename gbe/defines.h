@@ -18,6 +18,12 @@ namespace Cycles
 
 namespace Memory
 {
+    static const u16 VBlankInterruptAddr = 0x0040;
+    static const u16 LCDCStatusInterrupAddr = 0x0048;
+    static const u16 TimerOverflowInterrupAddr = 0x0050;
+    static const u16 SerialTransferInterrupAddr = 0x0058;
+    static const u16 HiLoP10P13InterrupAddr = 0x0060;
+
     static const u16 BootRomStartAddr = 0x0000;
     static const u16 BootRomEndAddr = 0x0100;
 
@@ -39,6 +45,12 @@ namespace Memory
     static const u16 RamStartAddr = 0xC000;
     static const u16 RamEndAddr = 0xDFFF;
 
+    static const u16 OAMStartAddr = 0xFE00;
+    static const u16 OAMEndAddr = 0xFE9F;
+
+    static const u16 NotUsableStartAddr = 0xFEA0;
+    static const u16 NotUsableEndAddr = 0xFEFF;
+
     static const u16 IORegsStartAddr = 0xFF00;
     static const u16 IORegsEndAddr = 0xFF7F;
 
@@ -50,9 +62,13 @@ namespace Memory
 
 namespace IOReg
 {
+    static const u16 IF = 0xFF0F;   // Interrupt Flag
     static const u16 LCDC = 0xFF40; // LCD Control
     static const u16 SCY = 0xFF42;  // Scroll Y
     static const u16 SCX = 0xFF43;  // Scroll X
     static const u16 LY = 0xFF44;   // LCDC Y Coordinate
     static const u16 BGP = 0xFF47;  // BG & Window Palette Data
+    static const u16 OBP0 = 0xFF48; // Object Palette 0 Data
+    static const u16 OBP1 = 0xFF49; // Object Palette 1 Data
+    static const u16 IE = 0xFFFF;   // Interrupt Enable
 }

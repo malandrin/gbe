@@ -2,14 +2,7 @@
 #ifndef _CPU_H
 #define _CPU_H
 
-#include "cpu_listener.h"
-
 class MMU;
-
-class CPUDummyListener : public ICpuListener
-{
-    void OnStep(int _numCycles) {};
-};
 
 class CPU
 {
@@ -31,6 +24,8 @@ public:
 	u16 GetRegSP () const { return mRegSP; }
 	u16 GetRegPC () const { return mRegPC; }
 
+    u16 GetSPStartAddr () const { return mSPStartAddr; }
+
 	bool GetFlagZ () const { return mFlagZ; }
 	bool GetFlagN () const { return mFlagN; }
 	bool GetFlagH () const { return mFlagH; }
@@ -41,8 +36,6 @@ public:
 	void Continue	   () { mOnDebugMode = false; }
 
     void SetStateAfterBoot  ();
-
-	void AddListener (ICpuListener *_listener);
 
 private:
 	MMU &mMmu;
@@ -77,24 +70,36 @@ private:
 		};
 	};
 
-	u8   mRegA {0};
+	u8    mRegA {0};
 	RegBC mRegBC;
 	RegDE mRegDE;
 	RegHL mRegHL;
-	u16  mRegSP {0};
-	u16  mRegPC {0};
+	u16   mRegSP {0};
+	u16   mRegPC {0};
+
+    u16   mSPStartAddr {0};
 
 	bool mFlagZ {false};
 	bool mFlagN {false};
 	bool mFlagH {false};
 	bool mFlagC {false};
+    bool mIME {true}; // Interrupt master enabled
+    bool mDI {false}; // Disable interrupts
+    bool mMI {false}; // Managing interrupts
 
 	bool mOnDebugMode{false};
 
-    ICpuListener* mListeners[2] {nullptr};
-    CPUDummyListener* mDummyListener {nullptr};
+    u8    mRegASaved{ 0 };
+    RegBC mRegBCSaved;
+    RegDE mRegDESaved;
+    RegHL mRegHLSaved;
+    bool  mFlagZSaved {false};
+    bool  mFlagNSaved {false};
+    bool  mFlagHSaved {false};
+    bool  mFlagCSaved {false};
 
-	int ProcessCb(u8 _opcode);
+    // ...
+    int  ProcessCb(u8 _opcode);
 	int  InternalStep();
 
 	void IncReg(u8 &_reg);
@@ -108,6 +113,11 @@ private:
 
 	void Push(u16 _val);
 	u16  Pop();
+
+    void ManageInterrupt    (int _interruptBit, u16 _interruptAddr, u8 _iflags, u8 _ienable);
+    void ManageEndInterrupt (bool _enableIME);
+    void SaveRegisters      ();
+    void RestoreRegisters   ();
 };
 
 #endif

@@ -33,6 +33,7 @@ private:
     GeneralViewer      mGeneralViewer;
     VRAMViewer         mVRamViewer;
     CPU&               mCpu;
+    GB&                mGb;
     int                mNumCyclesToExecute { 0 };
 };
 

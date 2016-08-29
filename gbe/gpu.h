@@ -1,13 +1,12 @@
 #pragma once
 
 #include "mmu_listener.h"
-#include "cpu_listener.h"
 #include "defines.h"
 
 class CPU;
 class MMU;
 
-class GPU : public IMmuListener, ICpuListener
+class GPU : public IMmuListener
 {
 public:
 
@@ -17,7 +16,6 @@ public:
     void OnMemoryWrittenU8  (u16 _virtAddr, u8 _value);
     void OnMemoryWrittenU16 (u16 _virtAddr, u16 _value);
 
-    // CPU listener
     void OnStep             (int _numCycles);
 
     bool IsLCDOn            () const { return mLCDOn; }
@@ -36,6 +34,8 @@ private:
 
     MMU &mMmu;
     u8  mPalette[4] {0};
+    u8  mSprPalette0[4]{ 0 };
+    u8  mSprPalette1[4]{ 0 };
     u8  mBuffer[256 * 256];
     u32 mScreen[Screen::Width * Screen::Height] {0};
     int mMode {OAM};

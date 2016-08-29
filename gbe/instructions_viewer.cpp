@@ -196,7 +196,7 @@ void InstructionsViewer::CalculateInstructionLines()
     mPCLineInfo = new int[instrMemSize] {0};
 
     // ...
-    int i = mGb.GetCpu().GetRegPC();
+    int i = 0;
 
     while (i < instrMemSize)
     {

@@ -13,6 +13,8 @@ public:
     GB() : mCpu(mMmu), mGpu(mCpu, mMmu) {}
 
     void        PowerUp    (const string& _cartridge, const string& _bootRom);
+    int         Step       ();
+
     const MMU&  GetMmu     () const { return mMmu; }
     CPU&        GetCpu     () { return mCpu; }
     GPU&        GetGpu     () { return mGpu; }

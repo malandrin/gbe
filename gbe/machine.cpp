@@ -35,7 +35,7 @@ void Machine::Update(int _numCycles)
     int nc = 0;
 
     while (nc < _numCycles)
-	    nc += mCpu.Step();
+	    nc += mGb.Step();
 }
 
 //--------------------------------------------

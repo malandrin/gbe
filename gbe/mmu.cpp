@@ -15,6 +15,7 @@ MMU::MMU()
     fill_n(mBootableRom, BootableRomSize, 0);
     fill_n(mIORegisters, IORegistersSize, 0);
     fill_n(mHighRam, HighRamSize, 0);
+    fill_n(mOAM, OAMSize, 0);
 
     mDummyListener = new MMUDummyListener();
     mListeners[0] = mDummyListener;
@@ -131,6 +132,9 @@ u8* MMU::VirtAddrToPhysAddr(u16 _virtAddr) const
     if ((_virtAddr >= Memory::RamStartAddr) && (_virtAddr <= Memory::RamEndAddr))
         return (u8*)&mRam[_virtAddr - Memory::RamStartAddr];
 
+    if ((_virtAddr >= Memory::OAMStartAddr) && (_virtAddr <= Memory::OAMEndAddr))
+        return (u8*)&mOAM[_virtAddr - Memory::OAMStartAddr];
+
     if ((_virtAddr >= Memory::IORegsStartAddr) && (_virtAddr <= Memory::IORegsEndAddr))
         return (u8*)&mIORegisters[_virtAddr - Memory::IORegsStartAddr];
 
@@ -141,4 +145,18 @@ u8* MMU::VirtAddrToPhysAddr(u16 _virtAddr) const
         return (u8*)&mIER;
 
     throw runtime_error("memory address unknown: " + Int2Hex(_virtAddr));
+}
+
+//--------------------------------------------
+// --
+//--------------------------------------------
+bool MMU::IsValidAddr(u16 _virtAddr, bool _read) const
+{
+    if (_read)
+        return !((_virtAddr >= Memory::NotUsableStartAddr) && (_virtAddr <= Memory::NotUsableEndAddr));
+
+    return !(
+        ((_virtAddr >= Memory::NotUsableStartAddr) && (_virtAddr <= Memory::NotUsableEndAddr)) || 
+        ((_virtAddr >= Memory::RomStartAddr) && (_virtAddr <= Memory::RomBankNEndAddr))
+    );
 }

@@ -9,7 +9,7 @@
 //--------------------------------------------
 // --
 //--------------------------------------------
-Debugger::Debugger(GB& gb) : mMemoryViewer(gb.GetMmu()), mInstructionsViewer(gb, *this), mGeneralViewer(gb.GetCpu(), gb.GetMmu()), mVRamViewer(gb.GetMmu()), mCpu(gb.GetCpu())
+Debugger::Debugger(GB &gb) : mGb(gb), mMemoryViewer(gb.GetMmu()), mInstructionsViewer(gb, *this), mGeneralViewer(gb.GetCpu(), gb.GetMmu()), mVRamViewer(gb.GetMmu()), mCpu(gb.GetCpu())
 {
 	mWindow = SDL_CreateWindow("GBE Debugger", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1024, 768, SDL_WINDOW_OPENGL);
 	mContext = SDL_GL_CreateContext(mWindow);
@@ -53,7 +53,7 @@ void Debugger::Update(int _numCycles)
 
     while (mNumCyclesToExecute > 0)
     {
-        mNumCyclesToExecute -= mCpu.Step();
+        mNumCyclesToExecute -= mGb.Step();
 
         if (mInstructionsViewer.OnStep())
         {

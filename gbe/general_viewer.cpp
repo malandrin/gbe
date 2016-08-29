@@ -37,7 +37,7 @@ void GeneralViewer::RenderStackWnd()
 		if (sp != 0)
 		{
 			float lineHeight = ImGui::GetTextLineHeight();
-			int lineTotalCount = (Memory::HighRamEndAddr - sp) >> 1;
+			int lineTotalCount = (mCpu.GetSPStartAddr() - sp) >> 1;
 
 			ImGui::BeginChild("##stack_scrolling", ImVec2(0, 0));
 

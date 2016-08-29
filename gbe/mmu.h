@@ -21,31 +21,38 @@ public:
 	static const int BootableRomSize = 256;
     static const int IORegistersSize = 128;
     static const int HighRamSize = 127;
+    static const int OAMSize = 200;
 
     inline void WriteU8(u16 _virtAdd, u8 _value)
     {
-        *VirtAddrToPhysAddr(_virtAdd) = _value;
+        if (IsValidAddr(_virtAdd, false))
+        {
+            *VirtAddrToPhysAddr(_virtAdd) = _value;
 
-        mListeners[0]->OnMemoryWrittenU8(_virtAdd, _value);
-        mListeners[1]->OnMemoryWrittenU8(_virtAdd, _value);
+            mListeners[0]->OnMemoryWrittenU8(_virtAdd, _value);
+            mListeners[1]->OnMemoryWrittenU8(_virtAdd, _value);
+        }
     }
 
     inline u8 ReadU8(u16 _virtAdd) const
     {
-        return *VirtAddrToPhysAddr(_virtAdd);
+        return IsValidAddr(_virtAdd, true) ? *VirtAddrToPhysAddr(_virtAdd) : 0;
     }
 
     inline void WriteU16(u16 _virtAdd, u16 _value)
     {
-        (*(u16*)VirtAddrToPhysAddr(_virtAdd)) = _value;
+        if (IsValidAddr(_virtAdd, false))
+        {
+            (*(u16*)VirtAddrToPhysAddr(_virtAdd)) = _value;
 
-        mListeners[0]->OnMemoryWrittenU16(_virtAdd, _value);
-        mListeners[1]->OnMemoryWrittenU16(_virtAdd, _value);
+            mListeners[0]->OnMemoryWrittenU16(_virtAdd, _value);
+            mListeners[1]->OnMemoryWrittenU16(_virtAdd, _value);
+        }
     }
 
     inline u16 ReadU16(u16 _virtAdd) const
     {
-        return *(u16*)VirtAddrToPhysAddr(_virtAdd);
+        return IsValidAddr(_virtAdd, true) ? *(u16*)VirtAddrToPhysAddr(_virtAdd) : 0;
     }
 
 	const u8* GetBootableRom() const {return mBootableRom;}
@@ -72,13 +79,15 @@ public:
 
 private:
 
-    u8* VirtAddrToPhysAddr   (u16 _virtAddr) const;
+    u8*  VirtAddrToPhysAddr   (u16 _virtAddr) const;
+    bool IsValidAddr          (u16 _virtAddr, bool _read) const;
 
 	u8 mRam[RamSize];
 	u8 mVRam[VRamSize];
 	u8 mBootableRom[BootableRomSize];
     u8 mIORegisters[IORegistersSize];
     u8 mHighRam[HighRamSize];
+    u8 mOAM[OAMSize];
 	u8 *mRom {nullptr};
     u8 mIER { 0 }; // Interrups Enable Register
 	int mRomSize{0};

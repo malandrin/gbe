@@ -23,3 +23,14 @@ void GB::PowerUp(const string &_cartridge, const string &_bootRom)
         cout << e.what() << '\n';
     }
 }
+
+//--------------------------------------------
+// --
+//--------------------------------------------
+int GB::Step()
+{
+    int numCycles = mCpu.Step();
+    mGpu.OnStep(numCycles);
+
+    return numCycles;
+}

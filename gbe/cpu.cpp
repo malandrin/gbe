@@ -1,8 +1,8 @@
 #include <assert.h>
 #include "base.h"
 #include "mmu.h"
-#include "cpu_listener.h"
 #include "opcodes_info.h"
+#include "defines.h"
 #include "cpu.h"
 
 //--------------------------------------------
@@ -10,10 +10,6 @@
 //--------------------------------------------
 CPU::CPU(MMU &_mmu) : mMmu(_mmu)
 {
-    mDummyListener = new CPUDummyListener();
-
-    mListeners[0] = mDummyListener;
-    mListeners[1] = mDummyListener;
 }
 
 //--------------------------------------------
@@ -21,20 +17,6 @@ CPU::CPU(MMU &_mmu) : mMmu(_mmu)
 //--------------------------------------------
 CPU::~CPU()
 {
-    delete mDummyListener;
-}
-
-//--------------------------------------------
-// --
-//--------------------------------------------
-void CPU::AddListener(ICpuListener *_listener)
-{
-    assert(mListeners[1] == mDummyListener);
-
-    if (mListeners[0] == mDummyListener)
-        mListeners[0] = _listener;
-    else 
-        mListeners[1] = _listener;
 }
 
 //--------------------------------------------
@@ -51,6 +33,7 @@ void CPU::SetStateAfterBoot()
     mRegHL.h = 0x01;
     mRegHL.l = 0x4D;
     mRegSP = 0xFFFE;
+    mSPStartAddr = mRegSP;
     mFlagC = true;
     mFlagH = false;
     mFlagN = false;
@@ -293,12 +276,18 @@ int CPU::InternalStep()
         }
         break;
 
+        case 0x2A: // LD A, (HL+)
+            mRegA = mMmu.ReadU8(mRegHL.hl);
+            ++mRegHL.hl;
+            break;
+
         case 0x2E: // LD L, n
             mRegHL.l = mMmu.ReadU8(mRegPC++);
             break;
 
         case 0x31: // LD SP, nn
             mRegSP = mMmu.ReadU16(mRegPC);
+            mSPStartAddr = mRegSP;
 			mRegPC += 2;
             break;
 
@@ -308,6 +297,10 @@ int CPU::InternalStep()
 
         case 0x33: // INC SP
             ++mRegSP;
+            break;
+
+        case 0x36: // LD (HL), n
+            mMmu.WriteU8(mRegHL.hl, mMmu.ReadU8(mRegPC++));
             break;
 
         case 0x3C: // INC A
@@ -440,6 +433,7 @@ int CPU::InternalStep()
 
         case 0xC9: // RET
             mRegPC = Pop();
+            ManageEndInterrupt(false);
             break;
 
         case 0xCB: // CB
@@ -469,7 +463,7 @@ int CPU::InternalStep()
 
         case 0xD9: // RETI
             mRegPC = Pop();
-            // TODO: ACTIVAR INTERRUPCIONES
+            ManageEndInterrupt(true);
             break;
 
         case 0xE0: // LD (0xFF00 + n), A
@@ -489,6 +483,10 @@ int CPU::InternalStep()
             mRegA = mMmu.ReadU8(0xFF00 + mMmu.ReadU8(mRegPC++));
             break;
 
+        case 0xF3: // DI
+            mDI = true;
+            break;
+
         case 0xFE: // CP n
             CpRegA(mMmu.ReadU8(mRegPC++));
             break;
@@ -498,11 +496,99 @@ int CPU::InternalStep()
             break;
     }
 
-    // ...
-    mListeners[0]->OnStep(numCycles);
-    mListeners[1]->OnStep(numCycles);
+    if (mDI && (opcode != 0xF3))
+    {
+        mIME = false;
+        mDI = false;
+    }
+
+    // manage interrupts
+    if (mIME)
+    {
+        u8 iflags = mMmu.ReadU8(IOReg::IF);
+
+        if (iflags > 0)
+        {
+            u8 ienable = mMmu.ReadU8(IOReg::IE);
+            u16 addresses[] = { Memory::VBlankInterruptAddr, Memory::LCDCStatusInterrupAddr, Memory::TimerOverflowInterrupAddr,
+                Memory::SerialTransferInterrupAddr, Memory::HiLoP10P13InterrupAddr };
+
+            for (int i = 0; i < 5; ++i)
+            {
+                ManageInterrupt(i, addresses[i], iflags, ienable);
+
+                if (mMI)
+                {
+                    numCycles += 24;
+                    break;
+                }
+            }
+        }
+    }
 
     return numCycles;
+}
+
+//--------------------------------------------
+// --
+//--------------------------------------------
+void CPU::ManageInterrupt(int _interruptBit, u16 _interruptAddr, u8 _iflags, u8 _ienable)
+{
+    int interrupt = (1 << _interruptBit);
+
+    if ((_iflags & interrupt) && (_ienable & interrupt))
+    {
+        mIME = false;
+        mMI = true;
+        Push(mRegPC);
+        mRegPC = _interruptAddr;
+        mMmu.WriteU8(IOReg::IF, _iflags & ~interrupt);
+        SaveRegisters();
+    }
+}
+
+//--------------------------------------------
+// --
+//--------------------------------------------
+void CPU::ManageEndInterrupt(bool _enableIME)
+{
+    mIME = _enableIME;
+
+    if (mMI)
+    {
+        mMI = false;
+        RestoreRegisters();
+    }
+}
+
+//--------------------------------------------
+// --
+//--------------------------------------------
+void CPU::SaveRegisters()
+{
+    mRegASaved = mRegA;
+    mRegBCSaved = mRegBC;
+    mRegDESaved = mRegDE;
+    mRegHLSaved = mRegHL;
+    mFlagZSaved = mFlagZ;
+    mFlagNSaved = mFlagN;
+    mFlagHSaved = mFlagH;
+    mFlagCSaved = mFlagC;
+}
+
+//--------------------------------------------
+// --
+//--------------------------------------------
+void CPU::RestoreRegisters()
+{
+    mRegA  = mRegASaved;
+    mRegBC = mRegBCSaved;
+    mRegDE = mRegDESaved;
+    mRegHL = mRegHLSaved;
+    mFlagZ = mFlagZSaved;
+    mFlagN = mFlagNSaved;
+    mFlagH = mFlagHSaved;
+    mFlagC = mFlagCSaved;
 }
 
 //--------------------------------------------

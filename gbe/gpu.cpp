@@ -13,7 +13,6 @@ static u32 mColors[4] {0x9BBC0F, 0x8BAC0F, 0x306230, 0x0F380F};
 GPU::GPU(CPU &_cpu, MMU &_mmu) : mMmu(_mmu)
 {
     _mmu.AddListener(this);
-    _cpu.AddListener(this);
 }
 
 //--------------------------------------------
@@ -29,6 +28,20 @@ void GPU::OnMemoryWrittenU8(u16 _virtAddr, u8 _value)
             mPalette[1] = (_value >> 2) & 0b11;
             mPalette[2] = (_value >> 4) & 0b11;
             mPalette[3] = (_value >> 6) & 0b11;
+            break;
+
+        case IOReg::OBP0:
+            mSprPalette0[0] = 0;
+            mSprPalette0[1] = (_value >> 2) & 0b11;
+            mSprPalette0[2] = (_value >> 4) & 0b11;
+            mSprPalette0[3] = (_value >> 6) & 0b11;
+            break;
+
+        case IOReg::OBP1:
+            mSprPalette1[0] = 0;
+            mSprPalette1[1] = (_value >> 2) & 0b11;
+            mSprPalette1[2] = (_value >> 4) & 0b11;
+            mSprPalette1[3] = (_value >> 6) & 0b11;
             break;
 
         case IOReg::LCDC:
@@ -68,6 +81,7 @@ void GPU::OnStep(int _numCycles)
                 if (cl >= Screen::Height)
                 {
                     SetMode(VBLANK);
+                    mMmu.WriteU8(IOReg::IF, mMmu.ReadU8(IOReg::IF) & 1);
                     UpdateFrameBuffer();
                 }
                 else
