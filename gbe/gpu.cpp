@@ -54,6 +54,30 @@ void GPU::OnMemoryWrittenU8(u16 _virtAddr, u8 _value)
             mWindowTileMap = (_value & (1 << 6)) != 0 ? Memory::VRamTileMap1StartAddr : Memory::VRamTileMap2StartAddr;
             mLCDOn = (_value & (1 << 7)) != 0;
             break;
+
+        case IOReg::STAT:
+            switch(_value & 0b00000011)
+            {
+                case 0:
+                    SetMode(HBLANK);
+                    break;
+
+                case 1:
+                    mMmu.WriteU8(IOReg::LY, Screen::Height + 1);
+                    mMmu.WriteU8(IOReg::IF, mMmu.ReadU8(IOReg::IF) & 1);
+                    SetMode(VBLANK);
+                    UpdateFrameBuffer();
+                    break;
+
+                case 2:
+                    SetMode(OAM);
+                    break;
+
+                case 3:
+                    SetMode(OAM_VRAM);
+                    break;
+            }
+            break;
     }
 }
 

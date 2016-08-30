@@ -64,6 +64,7 @@ namespace IOReg
 {
     static const u16 IF = 0xFF0F;   // Interrupt Flag
     static const u16 LCDC = 0xFF40; // LCD Control
+    static const u16 STAT = 0xFF41; // LCDC Status
     static const u16 SCY = 0xFF42;  // Scroll Y
     static const u16 SCX = 0xFF43;  // Scroll X
     static const u16 LY = 0xFF44;   // LCDC Y Coordinate

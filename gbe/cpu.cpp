@@ -126,10 +126,22 @@ void CPU::CpRegA(u8 _val)
 //--------------------------------------------
 void CPU::AndRegA(u8 _val)
 {
-    mFlagZ = (mRegA & _val) == 0;
+    mRegA = mRegA & _val;
+    mFlagZ = mRegA == 0;
     mFlagN = false;
     mFlagH = true;
     mFlagC = false;
+}
+
+//--------------------------------------------
+// --
+//--------------------------------------------
+void CPU::AddReg(u16 &_dest, u16 _orig)
+{
+    _dest += _orig;
+    mFlagN = false;
+    
+    // TODO: implementar FlagH y FlagC
 }
 
 //--------------------------------------------
@@ -144,6 +156,29 @@ void CPU::RotateLeft(u8 &_reg)
     _reg = (_reg << 1) | cb;
 }
 
+//--------------------------------------------
+// --
+//--------------------------------------------
+void CPU::RotateLeftC(u8 &_reg)
+{
+    mFlagC = (_reg & 0b10000000) != 0;
+    _reg = _reg << 1;
+    mFlagZ = _reg == 0;
+    mFlagN = false;
+    mFlagH = false;
+}
+
+//--------------------------------------------
+// --
+//--------------------------------------------
+void CPU::RotateRightC(u8 &_reg)
+{
+    mFlagC = (_reg & 1) != 0;
+    _reg = _reg >> 1;
+    mFlagZ = _reg == 0;
+    mFlagN = false;
+    mFlagH = false;
+}
 
 //--------------------------------------------
 // --
@@ -156,6 +191,15 @@ int CPU::InternalStep()
     switch(opcode)
     {
         case 0x00: // NOP
+            break;
+
+        case 0x01: // LD BC, nn
+            mRegBC.bc = mMmu.ReadU16(mRegPC);
+            mRegPC += 2;
+            break;
+
+        case 0x02: // LD (BC), A
+            mMmu.WriteU8(mRegBC.bc, mRegA);
             break;
 
         case 0x03: // INC BC
@@ -174,9 +218,21 @@ int CPU::InternalStep()
             mRegBC.b = mMmu.ReadU8(mRegPC++);
             break;
 
+        case 0x07: // RLCA  
+            RotateLeftC(mRegA);
+            break;
+
         case 0x08: // LD (nn), SP
             mMmu.WriteU16(mMmu.ReadU16(mRegPC), mRegSP);
             mRegPC += 2;
+            break;
+
+        case 0x09: // ADD HL, BC
+            AddReg(mRegHL.hl, mRegBC.bc);
+            break;
+
+        case 0x0A: // LD A, (BC)
+            mRegA = mMmu.ReadU8(mRegBC.bc);
             break;
 
         case 0x0B: // DEC BC
@@ -193,6 +249,10 @@ int CPU::InternalStep()
 
         case 0x0E: // LD C, n
             mRegBC.c = mMmu.ReadU8(mRegPC++);
+            break;
+
+        case 0x0F:
+            RotateRightC(mRegA);
             break;
 
         case 0x11: // LD DE, nn
@@ -266,6 +326,10 @@ int CPU::InternalStep()
             ++mRegHL.h;
             break;
 
+        case 0x27: // DAA
+            //TODO: IMPLEMENTAR!!
+            break;
+
         case 0x28: // JR Z, r8
         {
             i8 offset = (i8)mMmu.ReadU8(mRegPC++);
@@ -319,6 +383,10 @@ int CPU::InternalStep()
             mRegBC.b = mRegDE.d;
             break;
 
+        case 0x46: // LD B, (HL)
+            mRegBC.b = mMmu.ReadU8(mRegHL.hl);
+            break;
+
         case 0x4F: // LD C, A
             mRegBC.c = mRegA;
             break;
@@ -355,6 +423,10 @@ int CPU::InternalStep()
             mRegA = mRegBC.b;
             break;
 
+        case 0x7A: // LD A, D
+            mRegA = mRegDE.d;
+            break;
+
         case 0x7B: // LD A, E
             mRegA = mRegDE.e;
             break;
@@ -365,6 +437,10 @@ int CPU::InternalStep()
 
         case 0x7D: // LD A, L
             mRegA = mRegHL.l;
+            break;
+
+        case 0x7E: // LD A, (HL)
+            mRegA = mMmu.ReadU8(mRegHL.hl);
             break;
 
         case 0x83: // ADD A, E
@@ -383,6 +459,10 @@ int CPU::InternalStep()
             AddRegA(mRegBC.c + (mFlagC ? 1 : 0));
             break;
 
+        case 0x8E: // ADC A, (HL)
+            AddRegA(mMmu.ReadU8(mRegHL.hl) + (mFlagC ? 1 : 0));
+            break;
+
         case 0x90: // SUB B
             SubRegA(mRegBC.b);
             break;
@@ -395,6 +475,10 @@ int CPU::InternalStep()
             SubRegA(mRegA + (mFlagC ? 1 : 0));
             break;
 
+        case 0xA0: // AND B
+            AndRegA(mRegBC.b);
+            break;
+
         case 0xA5: // AND L
             AndRegA(mRegHL.l);
             break;
@@ -402,6 +486,14 @@ int CPU::InternalStep()
         case 0xAF: // XOR A
             mRegA = 0;
             mFlagZ = true;
+            mFlagN = false;
+            mFlagH = false;
+            mFlagC = false;
+            break;
+
+        case 0xB1: // OR C
+            mRegA = mRegBC.c | mRegA;
+            mFlagZ = mRegA == 0;
             mFlagN = false;
             mFlagH = false;
             mFlagC = false;
@@ -433,7 +525,7 @@ int CPU::InternalStep()
 
         case 0xC9: // RET
             mRegPC = Pop();
-            ManageEndInterrupt(false);
+            ManageEndInterrupt();
             break;
 
         case 0xCB: // CB
@@ -461,9 +553,14 @@ int CPU::InternalStep()
             AddRegA(mMmu.ReadU8(mRegPC++) + (mFlagC ? 1 : 0));
             break;
 
+        case 0xD5: // PUSH DE
+            Push(mRegDE.de);
+            break;
+
         case 0xD9: // RETI
             mRegPC = Pop();
-            ManageEndInterrupt(true);
+            ManageEndInterrupt();
+            mIME = true;
             break;
 
         case 0xE0: // LD (0xFF00 + n), A
@@ -472,6 +569,14 @@ int CPU::InternalStep()
 
         case 0xE2: // LD (0xFF00 + C), A
             mMmu.WriteU8(0xFF00 + mRegBC.c, mRegA);
+            break;
+
+        case 0xE5: // PUSH HL
+            Push(mRegHL.hl);
+            break;
+
+        case 0xE6: // AND n
+            AndRegA(mMmu.ReadU8(mRegPC++));
             break;
 
         case 0xEA: // LD (nn), A
@@ -487,6 +592,14 @@ int CPU::InternalStep()
             mDI = true;
             break;
 
+        case 0xF5: // PUSH AF
+            Push((mRegA << 8) | GetFlagsAsU8());
+            break;
+
+        case 0xFB: // EI
+            mEI = true;
+            break;
+
         case 0xFE: // CP n
             CpRegA(mMmu.ReadU8(mRegPC++));
             break;
@@ -500,6 +613,12 @@ int CPU::InternalStep()
     {
         mIME = false;
         mDI = false;
+    }
+
+    if (mEI && (opcode != 0xFB))
+    {
+        mIME = true;
+        mEI = false;
     }
 
     // manage interrupts
@@ -532,6 +651,39 @@ int CPU::InternalStep()
 //--------------------------------------------
 // --
 //--------------------------------------------
+u8 CPU::GetFlagsAsU8()
+{
+    u8 val = 0;
+
+    if (mFlagZ)
+        val |= 1 << 7;
+
+    if (mFlagN)
+        val |= 1 << 6;
+
+    if (mFlagH)
+        val |= 1 << 5;
+
+    if (mFlagC)
+        val |= 1 << 4;
+
+    return val;
+}
+
+//--------------------------------------------
+// --
+//--------------------------------------------
+void CPU::SetFlagsFromU8(u8 _val)
+{
+    mFlagZ = (_val & (1 << 7)) != 0;
+    mFlagN = (_val & (1 << 6)) != 0;
+    mFlagH = (_val & (1 << 5)) != 0;
+    mFlagC = (_val & (1 << 4)) != 0;
+}
+
+//--------------------------------------------
+// --
+//--------------------------------------------
 void CPU::ManageInterrupt(int _interruptBit, u16 _interruptAddr, u8 _iflags, u8 _ienable)
 {
     int interrupt = (1 << _interruptBit);
@@ -550,10 +702,8 @@ void CPU::ManageInterrupt(int _interruptBit, u16 _interruptAddr, u8 _iflags, u8 
 //--------------------------------------------
 // --
 //--------------------------------------------
-void CPU::ManageEndInterrupt(bool _enableIME)
+void CPU::ManageEndInterrupt()
 {
-    mIME = _enableIME;
-
     if (mMI)
     {
         mMI = false;

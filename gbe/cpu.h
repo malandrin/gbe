@@ -85,6 +85,7 @@ private:
 	bool mFlagC {false};
     bool mIME {true}; // Interrupt master enabled
     bool mDI {false}; // Disable interrupts
+    bool mEI {false}; // Enable interrupts
     bool mMI {false}; // Managing interrupts
 
 	bool mOnDebugMode{false};
@@ -105,19 +106,25 @@ private:
 	void IncReg(u8 &_reg);
 	void DecReg(u8 &_reg);
 	void RotateLeft(u8 &_reg);
+    void RotateLeftC(u8 &_reg);
+    void RotateRightC(u8 &_reg);
 
 	void SubRegA(u8 _val);
 	void AddRegA(u8 _val);
 	void CpRegA(u8 _val);
 	void AndRegA(u8 _val);
 
+    void AddReg(u16 &_dest, u16 _orig);
+
 	void Push(u16 _val);
 	u16  Pop();
 
     void ManageInterrupt    (int _interruptBit, u16 _interruptAddr, u8 _iflags, u8 _ienable);
-    void ManageEndInterrupt (bool _enableIME);
+    void ManageEndInterrupt ();
     void SaveRegisters      ();
     void RestoreRegisters   ();
+    u8   GetFlagsAsU8       ();
+    void SetFlagsFromU8     (u8 _val);
 };
 
 #endif
