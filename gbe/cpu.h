@@ -99,6 +99,8 @@ private:
     bool  mFlagHSaved {false};
     bool  mFlagCSaved {false};
 
+    bool  mHalted {false};
+
     // ...
     int  ProcessCb(u8 _opcode);
 	int  InternalStep();
@@ -107,6 +109,7 @@ private:
 	void DecReg(u8 &_reg);
 	void RotateLeft(u8 &_reg);
     void RotateLeftC(u8 &_reg);
+    void RotateRight(u8 &_reg);
     void RotateRightC(u8 &_reg);
 
 	void SubRegA(u8 _val);
