@@ -12,7 +12,9 @@ namespace OpcodesInfo
         JumpI8,
         JumpCondI8,
         JumpU16,
+        // Implementar Salto condicionarl u16
         Ret,
+        //Implementar Ret Condicional
         Call,
         CallCond
     };

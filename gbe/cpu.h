@@ -100,6 +100,7 @@ private:
     bool  mFlagCSaved {false};
 
     bool  mHalted {false};
+    bool  mStopped {false};
 
     // ...
     int  ProcessCb(u8 _opcode);
@@ -116,8 +117,18 @@ private:
 	void AddRegA(u8 _val);
 	void CpRegA(u8 _val);
 	void AndRegA(u8 _val);
+    void XorRegA(u8 _val);
+    void OrRegA(u8 _val);
 
     void AddReg(u16 &_dest, u16 _orig);
+
+    void Bit(u8 _bit, u8 _reg);
+    void Res(u8 _bit, u8 &_reg);
+    void Set(u8 _bit, u8 &_reg);
+    void Swap(u8 &_reg);
+    void Sla(u8 &_reg);
+    void Sra(u8 &_reg);
+    void Srl(u8 &_reg);
 
 	void Push(u16 _val);
 	u16  Pop();

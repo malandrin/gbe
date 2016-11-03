@@ -33,9 +33,13 @@ Machine::~Machine()
 void Machine::Update(int _numCycles)
 {
     int nc = 0;
+    int cs = -1;
 
-    while (nc < _numCycles)
-	    nc += mGb.Step();
+    while ((nc < _numCycles) && (cs != 0))
+    {
+        cs = mGb.Step();
+	    nc += cs;
+    }
 }
 
 //--------------------------------------------

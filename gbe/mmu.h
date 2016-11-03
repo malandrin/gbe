@@ -68,7 +68,7 @@ public:
 
     const u8* GetActiveRom() const { return mBootableRomEnabled ? mBootableRom : mRom; }
     int GetActiveRomSize() const { return mBootableRomEnabled ? BootableRomSize : mRomSize; }
-    u16 GetActiveRomEntryAddr() const { return mBootableRomEnabled ? 0 : 0x100; } // TODO: revisar 0x100 si es correcto
+    u16 GetActiveRomEntryAddr() const { return mBootableRomEnabled ? 0 : 0x100; }
 
     bool IsInBootableRom     () const {return mBootableRomEnabled;}
     void DisableBootableRom  () {mBootableRomEnabled = false;}

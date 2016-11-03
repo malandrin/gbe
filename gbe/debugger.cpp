@@ -51,9 +51,12 @@ void Debugger::Update(int _numCycles)
     if (mNumCyclesToExecute <= 0)
         mNumCyclesToExecute = _numCycles;
 
-    while (mNumCyclesToExecute > 0)
+    int cs = -1;
+
+    while ((mNumCyclesToExecute > 0) && (cs != 0))
     {
-        mNumCyclesToExecute -= mGb.Step();
+        cs = mGb.Step();
+        mNumCyclesToExecute -= cs;
 
         if (mInstructionsViewer.OnStep())
         {
