@@ -7,7 +7,7 @@
 //--------------------------------------------
 ROMWalker::ROMWalker(const u8* _rom, int _romSize, u16 _addr) : mRom(_rom), mRomSize(_romSize)
 {
-    //Analyze(_addr);
+    Analyze(_addr);
 }
 
 //--------------------------------------------
@@ -70,13 +70,26 @@ void ROMWalker::AnalyzePath(u16 _addr)
                 break;
 
                 case OpcodesInfo::JumpU16:
-                    pc = (u16)mRom[pc++];
+                    pc = *((u16*)&mRom[pc]);
                     exit = mCode.find(pc) != mCode.end();
-                    break;
+                    break;                
+
+                case OpcodesInfo::JumpCondU16:
+                {
+                    u16 dst = *((u16*)&mRom[pc]);
+                    pc += 2;
+
+                    if (mCode.find(dst) == mCode.end())
+                        mPaths.push_back(dst);
+                }
+                break;
 
                 case OpcodesInfo::Ret:
-                    pc = stack.back();
-                    stack.pop_back();
+                    if (!stack.empty())
+                    {
+                        pc = stack.back();
+                        stack.pop_back();
+                    }
                     break;
 
                 case OpcodesInfo::CallCond:

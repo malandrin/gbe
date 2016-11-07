@@ -468,7 +468,7 @@ int CPU::InternalStep()
                 break;
 
             case 0x24: // INC H
-                ++mRegHL.h;
+                IncReg(mRegHL.h);
                 break;
 
             case 0x25: // DEC H
@@ -490,14 +490,14 @@ int CPU::InternalStep()
                     {
                         if (!mFlagH)
                         {
-                            if ((upper <= 8) && (lower >= 'A'))
+                            if ((upper <= 8) && (lower >= 0xA))
                                 lower += 6;
-                            else if ((upper >= 'A') && (lower <= 9))
+                            else if ((upper >= 0xA) && (lower <= 9))
                             {
                                 upper += 6;
                                 mFlagC = true;
                             }
-                            else if ((upper >= 9) && (lower >= 'A'))
+                            else if ((upper >= 9) && (lower >= 0xA))
                             {
                                 upper += 6;
                                 lower += 6;
@@ -508,7 +508,7 @@ int CPU::InternalStep()
                         {
                             if ((upper <= 9) && (lower <= 3))
                                 lower += 6;
-                            else if ((upper >= 'A') && (lower <= 3))
+                            else if ((upper >= 0xA) && (lower <= 3))
                             {
                                 upper += 6;
                                 lower += 6;
@@ -533,8 +533,8 @@ int CPU::InternalStep()
                     {
                         if (mFlagH && (upper <= 8) && (lower >= 6))
                         {
-                            upper += 'F';
-                            lower += 'A';
+                            upper += 0xF;
+                            lower += 0xA;
                         }
                     }
                     else 
@@ -1422,7 +1422,7 @@ int CPU::InternalStep()
             break;
 
             case 0xE9: // JP (HL)
-                mRegPC = mMmu.ReadU16(mRegHL.hl);
+                mRegPC = mRegHL.hl;
                 break;
 
             case 0xEA: // LD (nn), A

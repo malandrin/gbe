@@ -21,14 +21,16 @@ private:
 
     struct InstructionLine
     {
-        InstructionLine(int _a, int _nb, string& _ac)
+        InstructionLine(int _a, int _l, int _nb, string& _ac)
         {
             addr = _a;
+            line = _l;
             numBytes = _nb;
             asmCode = _ac;
         }
 
         int addr;
+        int line;
         int numBytes;
         string asmCode;
     };
@@ -41,10 +43,13 @@ private:
     int                     mPrevActiveLineIdx {0};
     int                     mAddrDigitCount;
     int                    *mPCLineInfo {nullptr};
+    int                     mRomSize {0};
+    bool                    mHighRamWalked {false};
     Debugger               &mDebugger;
 
-	void CalculateInstructionLines ();
-    void ToggleBreakpoint          (u16 _addr);
+	void CalculateInstructionLines  ();
+    void ToggleBreakpoint           (u16 _addr);
+    void ParseMemory                (int _addr, int _size);
 };
 
 #endif

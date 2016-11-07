@@ -16,6 +16,7 @@ public:
 	MMU();
     ~MMU();
 
+    // TODO: poner estas constantes en defines.h/Memory
 	static const int RamSize = 1024 * 8;
 	static const int VRamSize = 1024 * 8;
 	static const int BootableRomSize = 256;

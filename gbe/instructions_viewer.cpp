@@ -29,10 +29,23 @@ InstructionsViewer::~InstructionsViewer()
 bool InstructionsViewer::OnStep()
 {
     u16 pc = mGb.GetCpu().GetRegPC();
-    mPrevActiveLineIdx = mActiveLineIdx;
-    mActiveLineIdx = mPCLineInfo[pc] >> 1;
+    u16 addr = pc;
 
-    if ((mPCLineInfo[pc] & 1) != 0)
+    if (pc >= Memory::HighRamStartAddr && pc <= Memory::HighRamEndAddr)
+    {
+        if (!mHighRamWalked)
+        {
+            ParseMemory(Memory::HighRamStartAddr, MMU::HighRamSize);
+            mHighRamWalked = true;
+        }
+
+        addr = mRomSize + (pc - Memory::HighRamStartAddr);
+    }
+
+    mPrevActiveLineIdx = mActiveLineIdx;
+    mActiveLineIdx = mPCLineInfo[addr] >> 1;
+
+    if ((mPCLineInfo[addr] & 1) != 0)
         return true;
 
     return false;
@@ -80,7 +93,7 @@ void InstructionsViewer::Render()
 			if (i == mSelectedLineIdx)
 				ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(0, screenPos.y), ImVec2(wndWidth, screenPos.y + lineHeight), ImColor(127, 127, 127, 255));
 
-            if ((mPCLineInfo[line->addr] & 1) != 0)
+            if ((mPCLineInfo[line->line] & 1) != 0)
 				ImGui::GetWindowDrawList()->AddCircleFilled(ImVec2(15, screenPos.y + (lineHeight / 2.0f)), 5.0f, ImColor(255, 0, 0, 255));
 
             if (i == mActiveLineIdx)
@@ -106,7 +119,7 @@ void InstructionsViewer::Render()
 				if ((mousePos.x < wndWidth - style.ScrollbarSize - style.WindowPadding.x) &&
 					(mousePos.y >= screenPos.y) && (mousePos.y <= (screenPos.y + lineHeight - 1)))
 				{
-                    ToggleBreakpoint(line->addr);
+                    ToggleBreakpoint(line->line);
 				}
             }
 			else if (ImGui::IsMouseClicked(0))
@@ -186,47 +199,61 @@ void InstructionsViewer::ToggleBreakpoint(u16 _addr)
 //--------------------------------------------
 void InstructionsViewer::CalculateInstructionLines()
 {
-    int instrMemSize = mGb.GetMmu().GetActiveRomSize();
+    mRomSize = mGb.GetMmu().GetActiveRomSize();
 
 	mInstructionLines.clear();
+    mHighRamWalked = false;
 
     if (mPCLineInfo != nullptr)
         delete[] mPCLineInfo;
 
-    mPCLineInfo = new int[instrMemSize] {0};
+    mPCLineInfo = new int[mRomSize + MMU::HighRamSize] {0};
 
     // ...
+    ParseMemory(0, mRomSize);
+
+    // ...
+    mAddrDigitCount = 0;
+
+    for (int n = mRomSize - 1; n > 0; n >>= 4)
+        ++mAddrDigitCount;
+}
+
+//--------------------------------------------
+// --
+//--------------------------------------------
+void InstructionsViewer::ParseMemory(int _addr, int _size)
+{
     int i = 0;
 
-    while (i < instrMemSize)
+    while (i < _size)
     {
-        u16 addr = i;
-        u8  opcode = mGb.GetMmu().ReadU8(i++);
+        u16 addr = _addr + i;
+        u8  opcode = mGb.GetMmu().ReadU8(addr);
+        ++i;
 
-        //if (!mROMWalker.IsCode(addr))
-          //  mInstructionLines.push_back(InstructionLine(addr, 1, string(".DB " + Int2Hex(opcode))));
-        //else
+        //TODO: hacer que romwalker parsee la highram
+        if (!mROMWalker.IsCode(addr))
+            mInstructionLines.push_back(InstructionLine(addr, mInstructionLines.size(), 1, string(".DB " + Int2Hex(opcode))));
+        else
         {
             if (opcode == 0xCB)
             {
                 u8 opcodeCb = mGb.GetMmu().ReadU8(i);
-                mInstructionLines.push_back(InstructionLine(addr, 2, OpcodesInfo::cb[opcodeCb].asmCode(mGb, i + 1)));
+                mInstructionLines.push_back(InstructionLine(addr, mInstructionLines.size(), 2, OpcodesInfo::cb[opcodeCb].asmCode(mGb, addr + 1)));
                 ++i;
             }
             else
             {
                 u8 bl = OpcodesInfo::primary[opcode].bytesLength;
-                mInstructionLines.push_back(InstructionLine(addr, bl, OpcodesInfo::primary[opcode].asmCode(mGb, i)));
+                mInstructionLines.push_back(InstructionLine(addr, mInstructionLines.size(), bl, OpcodesInfo::primary[opcode].asmCode(mGb, addr)));
                 i += bl - 1;
             }
 
-            mPCLineInfo[addr] = (mInstructionLines.size() - 1) << 1;
+            if (addr >= Memory::HighRamStartAddr && addr <= Memory::HighRamEndAddr)
+                mPCLineInfo[mRomSize + (addr - Memory::HighRamStartAddr)] = (mInstructionLines.size() - 1) << 1;
+            else
+                mPCLineInfo[addr] = (mInstructionLines.size() - 1) << 1;
         }
     }
-
-    // ...
-    mAddrDigitCount = 0;
-
-    for (int n = instrMemSize - 1; n > 0; n >>= 4)
-        ++mAddrDigitCount;
 }

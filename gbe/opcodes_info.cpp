@@ -4,8 +4,6 @@
 
 OpcodesInfo::InfoPrimary OpcodesInfo::primary[256] =
 {
-    //TODO: revisar columna JumpType
-
     // 0x00
     { 1, 4,  OpcodesInfo::None, [](GB &_gb, u16 _pc) { return "NOP"; } },
     { 3, 12, OpcodesInfo::None, [](GB &_gb, u16 _pc) { return "LD BC, " + Int2Hex(_gb.GetMmu().ReadU16(_pc)); } },
@@ -61,15 +59,15 @@ OpcodesInfo::InfoPrimary OpcodesInfo::primary[256] =
     { 1, 4,  OpcodesInfo::None, [](GB &_gb, u16 _pc) { return "CPL"; } },
 
     // 0x30
-    { 1, 8,  OpcodesInfo::None, [](GB &_gb, u16 _pc) { return "JR NC, " + Int2Hex(_gb.GetMmu().ReadU8(_pc)); } },
+    { 1, 8,  OpcodesInfo::JumpCondI8, [](GB &_gb, u16 _pc) { return "JR NC, :" + Int2Hex(_pc + 1 + (i8)_gb.GetMmu().ReadU8(_pc)); } },
     { 3, 12, OpcodesInfo::None, [](GB &_gb, u16 _pc) { return "LD SP, " + Int2Hex(_gb.GetMmu().ReadU16(_pc)); } },
     { 1, 8,  OpcodesInfo::None, [](GB &_gb, u16 _pc) { return "LD (HL-), A"; } },
     { 1, 8,  OpcodesInfo::None, [](GB &_gb, u16 _pc) { return "INC SP"; } },
-    { 1, 12,  OpcodesInfo::None, [](GB &_gb, u16 _pc) { return "INC (HL)"; } },
-    { 1, 12,  OpcodesInfo::None, [](GB &_gb, u16 _pc) { return "DEC (HL)"; } },
+    { 1, 12, OpcodesInfo::None, [](GB &_gb, u16 _pc) { return "INC (HL)"; } },
+    { 1, 12, OpcodesInfo::None, [](GB &_gb, u16 _pc) { return "DEC (HL)"; } },
     { 2, 12, OpcodesInfo::None, [](GB &_gb, u16 _pc) { return "LD (HL), " + Int2Hex(_gb.GetMmu().ReadU8(_pc)); } },
     { 1, 4,  OpcodesInfo::None, [](GB &_gb, u16 _pc) { return "SCF"; } },
-    { 1, 8,  OpcodesInfo::None, [](GB &_gb, u16 _pc) { return "JR C, " + Int2Hex(_gb.GetMmu().ReadU8(_pc)); } },
+    { 1, 8,  OpcodesInfo::JumpCondI8, [](GB &_gb, u16 _pc) { return "JR C, :" + Int2Hex(_pc + 1 + (i8)_gb.GetMmu().ReadU8(_pc)); } },
     { 1, 0,  OpcodesInfo::None, [](GB &_gb, u16 _pc) { return "ADD HL, SP"; } },
     { 1, 8,  OpcodesInfo::None, [](GB &_gb, u16 _pc) { return "LD A, (HL-)"; } },
     { 1, 0,  OpcodesInfo::None, [](GB &_gb, u16 _pc) { return "DEC SP"; } },
@@ -223,17 +221,17 @@ OpcodesInfo::InfoPrimary OpcodesInfo::primary[256] =
     { 1, 4, OpcodesInfo::None, [](GB &_gb, u16 _pc) { return "CP A"; } },
 
     // 0xC0
-    { 1, 8,  OpcodesInfo::None, [](GB &_gb, u16 _pc) { return "RET NZ"; } },
+    { 1, 8,  OpcodesInfo::Ret, [](GB &_gb, u16 _pc) { return "RET NZ"; } },
     { 1, 12, OpcodesInfo::None, [](GB &_gb, u16 _pc) { return "POP BC"; } },
-    { 3, 12, OpcodesInfo::None, [](GB &_gb, u16 _pc) { return "JP NZ, " + Int2Hex(_gb.GetMmu().ReadU16(_pc)); } },
-    { 3, 16, OpcodesInfo::None, [](GB &_gb, u16 _pc) { return "JP " + Int2Hex(_gb.GetMmu().ReadU16(_pc)); } },
-    { 3, 12, OpcodesInfo::None, [](GB &_gb, u16 _pc) { return "CALL NZ, " + Int2Hex(_gb.GetMmu().ReadU16(_pc)); } },
+    { 3, 12, OpcodesInfo::JumpCondU16, [](GB &_gb, u16 _pc) { return "JP NZ, " + Int2Hex(_gb.GetMmu().ReadU16(_pc)); } },
+    { 3, 16, OpcodesInfo::JumpU16, [](GB &_gb, u16 _pc) { return "JP " + Int2Hex(_gb.GetMmu().ReadU16(_pc)); } },
+    { 3, 12, OpcodesInfo::CallCond, [](GB &_gb, u16 _pc) { return "CALL NZ, " + Int2Hex(_gb.GetMmu().ReadU16(_pc)); } },
     { 1, 16, OpcodesInfo::None, [](GB &_gb, u16 _pc) { return "PUSH BC"; } },
     { 2, 8,  OpcodesInfo::None, [](GB &_gb, u16 _pc) { return "ADD A, " + Int2Hex(_gb.GetMmu().ReadU8(_pc)); } },
     { 1, 16, OpcodesInfo::None, [](GB &_gb, u16 _pc) { return "RST 00H"; } },
-    { 1, 8,  OpcodesInfo::None, [](GB &_gb, u16 _pc) { return "RET Z"; } },
+    { 1, 8,  OpcodesInfo::Ret, [](GB &_gb, u16 _pc) { return "RET Z"; } },
     { 1, 16, OpcodesInfo::Ret,  [](GB &_gb, u16 _pc) { return "RET"; } },
-    { 3, 12, OpcodesInfo::None, [](GB &_gb, u16 _pc) { return "JP Z, " + Int2Hex(_gb.GetMmu().ReadU16(_pc)); } },
+    { 3, 12, OpcodesInfo::JumpCondU16, [](GB &_gb, u16 _pc) { return "JP Z, " + Int2Hex(_gb.GetMmu().ReadU16(_pc)); } },
     { 1, 4,  OpcodesInfo::None, [](GB &_gb, u16 _pc) { return "CB"; } },
     { 3, 12, OpcodesInfo::CallCond, [](GB &_gb, u16 _pc) { return "CALL Z, " + Int2Hex(_gb.GetMmu().ReadU16(_pc)); } },
     { 3, 14, OpcodesInfo::Call, [](GB &_gb, u16 _pc) { return "CALL " + Int2Hex(_gb.GetMmu().ReadU16(_pc)); } },
@@ -241,19 +239,19 @@ OpcodesInfo::InfoPrimary OpcodesInfo::primary[256] =
     { 1, 16, OpcodesInfo::None, [](GB &_gb, u16 _pc) { return "RST 08H"; } },
 
     // 0xD0
-    { 1, 8,  OpcodesInfo::None, [](GB &_gb, u16 _pc) { return "RET NC"; } },
+    { 1, 8,  OpcodesInfo::Ret, [](GB &_gb, u16 _pc) { return "RET NC"; } },
     { 1, 12, OpcodesInfo::None, [](GB &_gb, u16 _pc) { return "POP DE"; } },
-    { 3, 12, OpcodesInfo::None, [](GB &_gb, u16 _pc) { return "JP NC, " + Int2Hex(_gb.GetMmu().ReadU16(_pc)); } },
+    { 3, 12, OpcodesInfo::JumpCondU16, [](GB &_gb, u16 _pc) { return "JP NC, " + Int2Hex(_gb.GetMmu().ReadU16(_pc)); } },
     { 1, 0,  OpcodesInfo::None, [](GB &_gb, u16 _pc) { return ".DB $D3"; } },
-    { 3, 12, OpcodesInfo::None, [](GB &_gb, u16 _pc) { return "CALL NC, " + Int2Hex(_gb.GetMmu().ReadU16(_pc)); } },
+    { 3, 12, OpcodesInfo::CallCond, [](GB &_gb, u16 _pc) { return "CALL NC, " + Int2Hex(_gb.GetMmu().ReadU16(_pc)); } },
     { 1, 16, OpcodesInfo::None, [](GB &_gb, u16 _pc) { return "PUSH DE"; } },
     { 2, 8,  OpcodesInfo::None, [](GB &_gb, u16 _pc) { return "SUB " + Int2Hex(_gb.GetMmu().ReadU8(_pc)); } },
     { 1, 16, OpcodesInfo::None, [](GB &_gb, u16 _pc) { return "RST 10H"; } },
-    { 1, 8,  OpcodesInfo::None, [](GB &_gb, u16 _pc) { return "RET C"; } },
+    { 1, 8,  OpcodesInfo::Ret, [](GB &_gb, u16 _pc) { return "RET C"; } },
     { 1, 16, OpcodesInfo::Ret,  [](GB &_gb, u16 _pc) { return "RETI"; } },
-    { 3, 12, OpcodesInfo::None, [](GB &_gb, u16 _pc) { return "JP C, " + Int2Hex(_gb.GetMmu().ReadU16(_pc)); } },
+    { 3, 12, OpcodesInfo::JumpCondU16, [](GB &_gb, u16 _pc) { return "JP C, " + Int2Hex(_gb.GetMmu().ReadU16(_pc)); } },
     { 1, 0,  OpcodesInfo::None, [](GB &_gb, u16 _pc) { return ".DB $DB"; } },
-    { 3, 12, OpcodesInfo::None, [](GB &_gb, u16 _pc) { return "CALL C, " + Int2Hex(_gb.GetMmu().ReadU16(_pc)); } },
+    { 3, 12, OpcodesInfo::CallCond, [](GB &_gb, u16 _pc) { return "CALL C, " + Int2Hex(_gb.GetMmu().ReadU16(_pc)); } },
     { 1, 0,  OpcodesInfo::None, [](GB &_gb, u16 _pc) { return ".DB $DD"; } },
     { 2, 8,  OpcodesInfo::None, [](GB &_gb, u16 _pc) { return "SBC A, " + Int2Hex(_gb.GetMmu().ReadU8(_pc)); } },
     { 1, 16, OpcodesInfo::None, [](GB &_gb, u16 _pc) { return "RST 18H"; } },
