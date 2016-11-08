@@ -62,6 +62,7 @@ namespace Memory
 
 namespace IOReg
 {
+    static const u16 P1 = 0xFF00;   // Joypad Info
     static const u16 IF = 0xFF0F;   // Interrupt Flag
     static const u16 LCDC = 0xFF40; // LCD Control
     static const u16 STAT = 0xFF41; // LCDC Status

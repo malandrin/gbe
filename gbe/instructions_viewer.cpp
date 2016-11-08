@@ -93,7 +93,7 @@ void InstructionsViewer::Render()
 			if (i == mSelectedLineIdx)
 				ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(0, screenPos.y), ImVec2(wndWidth, screenPos.y + lineHeight), ImColor(127, 127, 127, 255));
 
-            if ((mPCLineInfo[line->line] & 1) != 0)
+            if ((mPCLineInfo[i] & 1) != 0)
 				ImGui::GetWindowDrawList()->AddCircleFilled(ImVec2(15, screenPos.y + (lineHeight / 2.0f)), 5.0f, ImColor(255, 0, 0, 255));
 
             if (i == mActiveLineIdx)
@@ -119,7 +119,7 @@ void InstructionsViewer::Render()
 				if ((mousePos.x < wndWidth - style.ScrollbarSize - style.WindowPadding.x) &&
 					(mousePos.y >= screenPos.y) && (mousePos.y <= (screenPos.y + lineHeight - 1)))
 				{
-                    ToggleBreakpoint(line->line);
+                    ToggleBreakpoint(i);
 				}
             }
 			else if (ImGui::IsMouseClicked(0))
@@ -234,19 +234,19 @@ void InstructionsViewer::ParseMemory(int _addr, int _size)
 
         //TODO: hacer que romwalker parsee la highram
         if (!mROMWalker.IsCode(addr))
-            mInstructionLines.push_back(InstructionLine(addr, mInstructionLines.size(), 1, string(".DB " + Int2Hex(opcode))));
+            mInstructionLines.push_back(InstructionLine(addr, 1, string(".DB " + Int2Hex(opcode))));
         else
         {
             if (opcode == 0xCB)
             {
                 u8 opcodeCb = mGb.GetMmu().ReadU8(i);
-                mInstructionLines.push_back(InstructionLine(addr, mInstructionLines.size(), 2, OpcodesInfo::cb[opcodeCb].asmCode(mGb, addr + 1)));
+                mInstructionLines.push_back(InstructionLine(addr, 2, OpcodesInfo::cb[opcodeCb].asmCode(mGb, addr + 1)));
                 ++i;
             }
             else
             {
                 u8 bl = OpcodesInfo::primary[opcode].bytesLength;
-                mInstructionLines.push_back(InstructionLine(addr, mInstructionLines.size(), bl, OpcodesInfo::primary[opcode].asmCode(mGb, addr)));
+                mInstructionLines.push_back(InstructionLine(addr, bl, OpcodesInfo::primary[opcode].asmCode(mGb, addr)));
                 i += bl - 1;
             }
 

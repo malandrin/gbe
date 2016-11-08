@@ -161,6 +161,7 @@
     <ClCompile Include="gb.cpp" />
     <ClCompile Include="gpu.cpp" />
     <ClCompile Include="instructions_viewer.cpp" />
+    <ClCompile Include="Joypad.cpp" />
     <ClCompile Include="machine.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="memory_viewer.cpp" />
@@ -180,6 +181,7 @@
     <ClInclude Include="defines.h" />
     <ClInclude Include="gb.h" />
     <ClInclude Include="gpu.h" />
+    <ClInclude Include="joypad.h" />
     <ClInclude Include="mmu_listener.h" />
     <ClInclude Include="instructions_viewer.h" />
     <ClInclude Include="machine.h" />
