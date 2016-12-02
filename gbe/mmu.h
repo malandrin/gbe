@@ -56,6 +56,8 @@ public:
         return IsValidAddr(_virtAdd, true) ? *(u16*)VirtAddrToPhysAddr(_virtAdd) : 0;
     }
 
+    void CopyMem    (u16 _startAddr, u16 _destAddr, u16 _size);
+
 	const u8* GetBootableRom() const {return mBootableRom;}
     const u8* GetRom() const {return mRom;}
 	const u8* GetRam() const {return mRam;}

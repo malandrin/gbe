@@ -24,13 +24,15 @@ void Joypad::OnMemoryWrittenU8(u16 _virtAdd, u8 _value)
         {
             int offset = -1;
 
-            if ((_value & 0x20) != 0) // P15
+            if ((_value & 0x10) != 0) // P15
                 offset = 4;
-            else if ((_value & 0x10) != 0) // P14
+            else if ((_value & 0x20) != 0) // P14
                 offset = 0;
 
-            if (offset != 0)
+            if (offset != -1)
             {
+                _value = 0;
+
                 for (int i = 0; i < 4; ++i)
                     _value |= (mKeyPressed[offset + i] ? 0 : 1) << i;
 

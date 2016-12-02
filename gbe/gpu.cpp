@@ -64,7 +64,7 @@ void GPU::OnMemoryWrittenU8(u16 _virtAddr, u8 _value)
 
                 case 1:
                     mMmu.WriteU8(IOReg::LY, Screen::Height + 1);
-                    mMmu.WriteU8(IOReg::IF, mMmu.ReadU8(IOReg::IF) & 1);
+                    mMmu.WriteU8(IOReg::IF, mMmu.ReadU8(IOReg::IF) | 1);
                     SetMode(VBLANK);
                     UpdateFrameBuffer();
                     break;
@@ -78,13 +78,17 @@ void GPU::OnMemoryWrittenU8(u16 _virtAddr, u8 _value)
                     break;
             }
             break;
+
+        case IOReg::DMA:
+            mMmu.CopyMem(_value * 0x100, Memory::OAMStartAddr, 40 * 4);
+            break;
     }
 }
 
 //--------------------------------------------
 // --
 //--------------------------------------------
-void GPU::OnMemoryWrittenU16(u16 _virtAdd, u16 _value)
+void GPU::OnMemoryWrittenU16(u16 _virtAddr, u16 _value)
 {
 }
 
@@ -105,7 +109,7 @@ void GPU::OnStep(int _numCycles)
                 if (cl >= Screen::Height)
                 {
                     SetMode(VBLANK);
-                    mMmu.WriteU8(IOReg::IF, mMmu.ReadU8(IOReg::IF) & 1);
+                    mMmu.WriteU8(IOReg::IF, mMmu.ReadU8(IOReg::IF) | 1);
                     UpdateFrameBuffer();
                 }
                 else

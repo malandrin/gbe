@@ -160,3 +160,11 @@ bool MMU::IsValidAddr(u16 _virtAddr, bool _read) const
         ((_virtAddr >= Memory::RomStartAddr) && (_virtAddr <= Memory::RomBankNEndAddr))
     );
 }
+
+//--------------------------------------------
+// --
+//--------------------------------------------
+void MMU::CopyMem(u16 _startAddr, u16 _destAddr, u16 _size)
+{
+    memcpy(VirtAddrToPhysAddr(_destAddr), VirtAddrToPhysAddr(_startAddr), _size);
+}

@@ -7,7 +7,7 @@
 //--------------------------------------------
 ROMWalker::ROMWalker(const u8* _rom, int _romSize, u16 _addr) : mRom(_rom), mRomSize(_romSize)
 {
-    Analyze(_addr);
+    //Analyze(_addr);
 }
 
 //--------------------------------------------

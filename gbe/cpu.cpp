@@ -1899,8 +1899,8 @@ int CPU::ProcessCb(u8 _opcode)
         }
         break;
 
-        case 0x37: // SRL A
-            Srl(mRegA);
+        case 0x37: // SWAP A
+            Swap(mRegA);
             break;
 
         case 0x38: // SRL B

@@ -45,7 +45,7 @@ bool InstructionsViewer::OnStep()
     mPrevActiveLineIdx = mActiveLineIdx;
     mActiveLineIdx = mPCLineInfo[addr] >> 1;
 
-    if ((mPCLineInfo[addr] & 1) != 0)
+    if ((mPCLineInfo[mActiveLineIdx] & 1) != 0)
         return true;
 
     return false;
@@ -212,6 +212,8 @@ void InstructionsViewer::CalculateInstructionLines()
     // ...
     ParseMemory(0, mRomSize);
 
+    mActiveLineIdx = mPCLineInfo[mGb.GetCpu().GetRegPC()] >> 1;
+
     // ...
     mAddrDigitCount = 0;
 
@@ -233,20 +235,20 @@ void InstructionsViewer::ParseMemory(int _addr, int _size)
         ++i;
 
         //TODO: hacer que romwalker parsee la highram
-        if (!mROMWalker.IsCode(addr))
-            mInstructionLines.push_back(InstructionLine(addr, 1, string(".DB " + Int2Hex(opcode))));
-        else
+        //if (!mROMWalker.IsCode(addr))
+        //    mInstructionLines.push_back(InstructionLine(addr, 1, string(".DB " + Int2Hex(opcode))));
+        //else
         {
             if (opcode == 0xCB)
             {
                 u8 opcodeCb = mGb.GetMmu().ReadU8(i);
-                mInstructionLines.push_back(InstructionLine(addr, 2, OpcodesInfo::cb[opcodeCb].asmCode(mGb, addr + 1)));
+                mInstructionLines.push_back(InstructionLine(addr, 2, OpcodesInfo::cb[opcodeCb].asmCode(mGb, addr + 2)));
                 ++i;
             }
             else
             {
                 u8 bl = OpcodesInfo::primary[opcode].bytesLength;
-                mInstructionLines.push_back(InstructionLine(addr, bl, OpcodesInfo::primary[opcode].asmCode(mGb, addr)));
+                mInstructionLines.push_back(InstructionLine(addr, bl, OpcodesInfo::primary[opcode].asmCode(mGb, addr + 1)));
                 i += bl - 1;
             }
 

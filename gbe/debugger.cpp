@@ -81,7 +81,7 @@ void Debugger::Render()
 
 	// ...
 	glViewport(0, 0, (int)ImGui::GetIO().DisplaySize.x, (int)ImGui::GetIO().DisplaySize.y);
-	glClearColor(1, 0, 0, 1);
+	glClearColor(0.7f, 0.7f, 0.7f, 1);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	ImGui::Render();

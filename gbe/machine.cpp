@@ -93,14 +93,14 @@ void Machine::HandleEvent(SDL_Event& _event)
 
             switch (_event.key.keysym.sym)
             {
-            case SDLK_UP:       joypad.OnKeyUp(Joypad::Key::Up);      break;
-            case SDLK_DOWN:     joypad.OnKeyUp(Joypad::Key::Down);    break;
-            case SDLK_LEFT:     joypad.OnKeyUp(Joypad::Key::Left);    break;
-            case SDLK_RIGHT:    joypad.OnKeyUp(Joypad::Key::Right);   break;
-            case SDLK_a:        joypad.OnKeyUp(Joypad::Key::A);       break;
-            case SDLK_s:        joypad.OnKeyUp(Joypad::Key::B);       break;
-            case SDLK_LSHIFT:   joypad.OnKeyUp(Joypad::Key::Select);  break;
-            case SDLK_RETURN:   joypad.OnKeyUp(Joypad::Key::Start);   break;
+                case SDLK_UP:       joypad.OnKeyUp(Joypad::Key::Up);      break;
+                case SDLK_DOWN:     joypad.OnKeyUp(Joypad::Key::Down);    break;
+                case SDLK_LEFT:     joypad.OnKeyUp(Joypad::Key::Left);    break;
+                case SDLK_RIGHT:    joypad.OnKeyUp(Joypad::Key::Right);   break;
+                case SDLK_a:        joypad.OnKeyUp(Joypad::Key::A);       break;
+                case SDLK_s:        joypad.OnKeyUp(Joypad::Key::B);       break;
+                case SDLK_LSHIFT:   joypad.OnKeyUp(Joypad::Key::Select);  break;
+                case SDLK_RETURN:   joypad.OnKeyUp(Joypad::Key::Start);   break;
             }
         }
         break;
