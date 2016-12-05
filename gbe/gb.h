@@ -6,12 +6,13 @@
 #include "cpu.h"
 #include "gpu.h"
 #include "joypad.h"
+#include "timer.h"
 
 class GB
 {
 public:
 
-                GB() : mCpu(mMmu), mGpu(mCpu, mMmu), mJoypad(mMmu) {}
+                GB         () : mCpu(mMmu, mTimer), mGpu(mCpu, mMmu), mJoypad(mMmu), mTimer(mMmu) {}
 
     void        PowerUp    (const string& _cartridge, const string& _bootRom);
     int         Step       ();
@@ -22,10 +23,11 @@ public:
     Joypad&     GetJoypad  () { return mJoypad; }
 
 private:
-	MMU mMmu;
-    CPU mCpu;
-    GPU mGpu;
-    Joypad mJoypad;
+	MMU     mMmu;
+    CPU     mCpu;
+    GPU     mGpu;
+    Joypad  mJoypad;
+    Timer   mTimer;
 };
 
 #endif

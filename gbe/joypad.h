@@ -36,6 +36,5 @@ public:
 private:
 
     bool mKeyPressed[Key::Num] {false};
-    bool mIgnoreWritten {false};
     MMU& mMmu;
 };

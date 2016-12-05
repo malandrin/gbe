@@ -6,7 +6,7 @@
 #include "mmu.h"
 #include "vram_viewer.h"
 
-static string sRadioButtonsText[4] { "Tile Data 1", "Tile Data 2", "Tile Map 1", "Tile Map 2" };
+static string sRadioButtonsText[5] { "TData 1", "TData 2", "TMap 1", "TMap 2", "OAM" };
 static u32 sPalette[4] = { 0xFF000000, 0xFF404040, 0xFF7F7F7F, 0xFFFFFFFF};
 
 //--------------------------------------------
@@ -38,7 +38,7 @@ void VRAMViewer::Render()
 
     if (ImGui::Begin("VRAM", nullptr, ImVec2(464, 468), 1.0f, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings))
     {
-        for (int i = 0; i < 4; ++i)
+        for (int i = 0; i < 5; ++i)
         {
             ImGui::SameLine();
             ImGui::RadioButton(sRadioButtonsText[i].c_str(), &mActiveVRam, i);
@@ -70,6 +70,11 @@ void VRAMViewer::Render()
                 ImGui::GetWindowDrawList()->AddLine(ImVec2(x + Screen::Width, y), ImVec2(x + Screen::Width, y + Screen::Height), ImColor(ImGui::GetStyle().Colors[ImGuiCol_Border]));
             }
             break;
+
+            case 4:
+                BuildOAMData();
+                ImGui::Image((ImTextureID)mTextureId, ImVec2(384, 384), ImVec2(0.0f, 0.0f), ImVec2(0.53125f, 0.53125f));
+                break;
         }
     }
     ImGui::End();
@@ -91,6 +96,37 @@ void VRAMViewer::BuildTileMap(u16 _addrMap, u16 _addrTiles)
 
         ++c;
         if (c == 32)
+        {
+            c = 0;
+            ++r;
+        }
+    }
+
+    glBindTexture(GL_TEXTURE_2D, mTextureId);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 256, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, mTextureArray);
+}
+
+//--------------------------------------------
+// --
+//--------------------------------------------
+void VRAMViewer::BuildOAMData()
+{
+    fill_n(mTextureArray, 256 * 256, 0xFF733A3A);
+
+    int r = 0;
+    int c = 0;
+    u16 addr = Memory::OAMStartAddr;
+
+    for (int t = 0; t < 40; ++t)
+    {
+        addr += 2; // ignore sprite position
+        u8 sprTile = mMmu.ReadU8(addr++);
+        ++addr; // ignore sprite attribute
+            
+        RenderTile(Memory::VRamTileData1StartAddr, sprTile, (c * 8) + c + 1, (r * 8) + r + 1);
+
+        ++c;
+        if (c == 16)
         {
             c = 0;
             ++r;

@@ -20,6 +20,7 @@ MMU::MMU()
     mDummyListener = new MMUDummyListener();
     mListeners[0] = mDummyListener;
     mListeners[1] = mDummyListener;
+    mListeners[2] = mDummyListener;
 }
 
 //--------------------------------------------
@@ -38,12 +39,14 @@ MMU::~MMU()
 //--------------------------------------------
 void MMU::AddListener(IMmuListener* _listener)
 {
-    assert(mListeners[1] == mDummyListener);
+    assert(mListeners[2] == mDummyListener);
 
     if (mListeners[0] == mDummyListener)
         mListeners[0] = _listener;
-    else
+    else if (mListeners[1] == mDummyListener)
         mListeners[1] = _listener;
+    else
+        mListeners[2] = _listener;
 }
 
 //--------------------------------------------

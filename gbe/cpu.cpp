@@ -3,12 +3,14 @@
 #include "mmu.h"
 #include "opcodes_info.h"
 #include "defines.h"
+#include "timer.h"
+
 #include "cpu.h"
 
 //--------------------------------------------
 // --
 //--------------------------------------------
-CPU::CPU(MMU &_mmu) : mMmu(_mmu)
+CPU::CPU(MMU &_mmu, Timer &_timer) : mMmu(_mmu), mTimer(_timer)
 {
 }
 
@@ -541,17 +543,19 @@ int CPU::InternalStep()
                     {
                         if (!mFlagH && (upper >= 7) && (lower <= 9))
                         {
-                            upper += 'A';
+                            upper += 0xA;
                             mFlagC = true;
                         }
                         else if (mFlagH && (upper >= 6) && (lower >= 6))
                         {
                             upper += 9;
-                            lower += 'A';
+                            lower += 0xA;
                             mFlagC = true;
                         }
                     }
                 }
+
+                mRegA = (upper << 4) | lower;
             }
             break;
 
@@ -1522,6 +1526,8 @@ int CPU::InternalStep()
             mEI = false;
         }
     }
+
+    mTimer.Update(numCycles);
 
     // manage interrupts
     if (mIME)

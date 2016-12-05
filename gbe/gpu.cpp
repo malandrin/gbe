@@ -66,11 +66,11 @@ void GPU::OnMemoryWrittenU8(u16 _virtAddr, u8 _value)
                     mMmu.WriteU8(IOReg::LY, Screen::Height + 1);
                     mMmu.WriteU8(IOReg::IF, mMmu.ReadU8(IOReg::IF) | 1);
                     SetMode(VBLANK);
-                    UpdateFrameBuffer();
                     break;
 
                 case 2:
                     SetMode(OAM);
+                    UpdateFrameBuffer();
                     break;
 
                 case 3:
@@ -128,6 +128,7 @@ void GPU::OnStep(int _numCycles)
                 if (cl > Screen::TotalHeight)
                 {
                     SetMode(OAM);
+                    UpdateFrameBuffer();
                     mMmu.WriteU8(IOReg::LY, 0);
                 }
                 else
@@ -160,6 +161,7 @@ void GPU::UpdateFrameBuffer()
         int r = 0;
         int c = 0;
 
+        // tile map
         for (int t = 0; t < 1024; ++t)
         {
             RenderTile(mBGTileData, mMmu.ReadU8(mBGTileMap + t), c * 8, r * 8);
@@ -170,6 +172,19 @@ void GPU::UpdateFrameBuffer()
                 c = 0;
                 ++r;
             }
+        }
+
+        // sprites
+        u16 addr = Memory::OAMStartAddr;
+
+        for (int s = 0; s < 40; ++s)
+        {            
+            u8 sprPosY = mMmu.ReadU8(addr++);
+            u8 sprPosX = mMmu.ReadU8(addr++);
+            u8 sprTile = mMmu.ReadU8(addr++);
+            u8 sprAttr = mMmu.ReadU8(addr++);
+
+            RenderSprite(sprPosX, sprPosY, sprTile, sprAttr);
         }
 
         // ...
@@ -188,6 +203,54 @@ void GPU::UpdateFrameBuffer()
 
                 mScreen[(y * Screen::Width) + x] = mColors[mBuffer[(by * 256) + bx]];
             }
+        }
+    }
+}
+
+//--------------------------------------------
+// --
+//--------------------------------------------
+void GPU::RenderSprite(u8 _x, u8 _y, u8 _numTile, u8 _attr)
+{
+    u16 tileAddr = Memory::VRamTileData1StartAddr + (_numTile * 16);
+
+    if ((_y == 0) || (_y == Screen::Height + 16) || (_x == 0) || (_x == Screen::Width + 8))
+        return;
+
+    // pivot point is in the right bottom corner
+    _x -= 8;
+    _y -= 16;
+
+    u8 ir = 0;
+    u8 fr = 8;
+
+    /*
+    if (_y < 16)
+        ir = 16 - _y;
+    else if (_y >= Screen::Height)
+        fr = Screen::Height - _y;
+    */
+
+    u8 ic = 0;
+    u8 fc = 8;
+
+    /*
+    if (_x < 8)
+        ic = 8 - _x;
+    else if (_x >= Screen::Width)
+        fc = Screen::Width - _x;
+    */
+
+    // ...
+    for (int r = ir; r < fr; ++r)
+    {
+        u8 b1 = mMmu.ReadU8(tileAddr++);
+        u8 b2 = mMmu.ReadU8(tileAddr++);
+
+        for (int b = fc - 1; b >= ic; --b)
+        {
+            u8 cp = (((b1 >> b) & 1) << 1) | ((b2 >> b) & 1);
+            mBuffer[((_y + r) * 256) + _x + (7 - b)] = cp;
         }
     }
 }

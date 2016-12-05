@@ -3,14 +3,15 @@
 #define _CPU_H
 
 class MMU;
+class Timer;
 
 class CPU
 {
 public:
-	    CPU(MMU &_mmu);
-       ~CPU();
+	    CPU      (MMU &_mmu, Timer &_timer);
+       ~CPU      ();
 
-	int Step();
+	int Step     ();
 
 	u8  GetRegA  () const { return mRegA; }
 	u8  GetRegB  () const { return mRegBC.b; }
@@ -38,7 +39,8 @@ public:
     void SetStateAfterBoot  ();
 
 private:
-	MMU &mMmu;
+	MMU     &mMmu;
+    Timer   &mTimer;
 
 	union RegHL
 	{

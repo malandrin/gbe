@@ -170,6 +170,7 @@
     <ClCompile Include="opcodes_info.cpp" />
     <ClCompile Include="opcodes_info_cb.cpp" />
     <ClCompile Include="rom_walker.cpp" />
+    <ClCompile Include="timer.cpp" />
     <ClCompile Include="vram_viewer.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -190,6 +191,7 @@
     <ClInclude Include="general_viewer.h" />
     <ClInclude Include="opcodes_info.h" />
     <ClInclude Include="rom_walker.h" />
+    <ClInclude Include="timer.h" />
     <ClInclude Include="vram_viewer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

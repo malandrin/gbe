@@ -24,14 +24,18 @@ public:
     static const int HighRamSize = 127;
     static const int OAMSize = 200;
 
-    inline void WriteU8(u16 _virtAdd, u8 _value)
+    inline void WriteU8(u16 _virtAdd, u8 _value, bool _warnLinesteners = true)
     {
         if (IsValidAddr(_virtAdd, false))
         {
             *VirtAddrToPhysAddr(_virtAdd) = _value;
 
-            mListeners[0]->OnMemoryWrittenU8(_virtAdd, _value);
-            mListeners[1]->OnMemoryWrittenU8(_virtAdd, _value);
+            if (_warnLinesteners)
+            {
+                mListeners[0]->OnMemoryWrittenU8(_virtAdd, _value);
+                mListeners[1]->OnMemoryWrittenU8(_virtAdd, _value);
+                mListeners[2]->OnMemoryWrittenU8(_virtAdd, _value);
+            }
         }
     }
 
@@ -48,6 +52,7 @@ public:
 
             mListeners[0]->OnMemoryWrittenU16(_virtAdd, _value);
             mListeners[1]->OnMemoryWrittenU16(_virtAdd, _value);
+            mListeners[2]->OnMemoryWrittenU16(_virtAdd, _value);
         }
     }
 
@@ -95,7 +100,7 @@ private:
     u8 mIER { 0 }; // Interrups Enable Register
 	int mRomSize{0};
     bool mBootableRomEnabled {true};
-    IMmuListener* mListeners[2] {nullptr};
+    IMmuListener* mListeners[3] {nullptr};
     MMUDummyListener* mDummyListener {nullptr};
 };
 
