@@ -75,14 +75,45 @@ void Machine::HandleEvent(SDL_Event& _event)
 
             switch(_event.key.keysym.sym)
             {
-                case SDLK_UP:       joypad.OnKeyDown(Joypad::Key::Up);      break;
-                case SDLK_DOWN:     joypad.OnKeyDown(Joypad::Key::Down);    break;
-                case SDLK_LEFT:     joypad.OnKeyDown(Joypad::Key::Left);    break;
-                case SDLK_RIGHT:    joypad.OnKeyDown(Joypad::Key::Right);   break;
-                case SDLK_a:        joypad.OnKeyDown(Joypad::Key::A);       break;
-                case SDLK_s:        joypad.OnKeyDown(Joypad::Key::B);       break;
-                case SDLK_LSHIFT:   joypad.OnKeyDown(Joypad::Key::Select);  break;
-                case SDLK_RETURN:   joypad.OnKeyDown(Joypad::Key::Start);   break;
+                case SDLK_UP:       
+                    joypad.OnKeyDown(Joypad::Key::Up);      
+                    mCpu.ExitStopped();
+                    break;
+
+                case SDLK_DOWN:     
+                    joypad.OnKeyDown(Joypad::Key::Down);    
+                    mCpu.ExitStopped();
+                    break;
+
+                case SDLK_LEFT:     
+                    joypad.OnKeyDown(Joypad::Key::Left);    
+                    mCpu.ExitStopped();
+                    break;
+
+                case SDLK_RIGHT:    
+                    joypad.OnKeyDown(Joypad::Key::Right);   
+                    mCpu.ExitStopped();
+                    break;
+
+                case SDLK_a:        
+                    joypad.OnKeyDown(Joypad::Key::A);       
+                    mCpu.ExitStopped();
+                    break;
+
+                case SDLK_s:        
+                    joypad.OnKeyDown(Joypad::Key::B);       
+                    mCpu.ExitStopped();
+                    break;
+
+                case SDLK_LSHIFT:   
+                    joypad.OnKeyDown(Joypad::Key::Select);  
+                    mCpu.ExitStopped();
+                    break;
+
+                case SDLK_RETURN:   
+                    joypad.OnKeyDown(Joypad::Key::Start);   
+                    mCpu.ExitStopped();
+                    break;
             }
         }
         break;

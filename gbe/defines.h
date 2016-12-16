@@ -30,8 +30,17 @@ namespace Memory
     static const u16 RomStartAddr = 0x0000;
     static const u16 RomEndAddr = 0x3FFF;
 
+    static const u16 RomBankNumberStartAddr = 0x2000;
+    static const u16 RomBankNumberEndAddr = 0x3FFF;
+
     static const u16 RomBankNStartAddr = 0x4000;
     static const u16 RomBankNEndAddr = 0x7FFF;
+
+    static const u16 RamBankNumberStartAddr = 0x4000;
+    static const u16 RamBankNumberEndAddr = 0x5FFF;
+
+    static const u16 RomRamModeSelectStartAddr = 0x6000;
+    static const u16 RomRamModeSelectEndAddr = 0x7FFF;
 
     static const u16 VRamStartAddr = 0x8000;
     static const u16 VRamEndAddr = 0x9FFF;
@@ -42,8 +51,14 @@ namespace Memory
     static const u16 VRamTileMap1StartAddr = 0x9800;
     static const u16 VRamTileMap2StartAddr = 0x9C00;
 
+    static const u16 ExternalRamStartAddr = 0xA000;
+    static const u16 ExternalRamEndAddr = 0xBFFF;
+
     static const u16 RamStartAddr = 0xC000;
     static const u16 RamEndAddr = 0xDFFF;
+
+    static const u16 RamMirrorStartAddr = 0xE000;
+    static const u16 RamMirrorEndAddr = 0xEFFF;
 
     static const u16 OAMStartAddr = 0xFE00;
     static const u16 OAMEndAddr = 0xFE9F;

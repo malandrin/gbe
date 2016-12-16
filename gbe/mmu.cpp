@@ -11,6 +11,7 @@
 MMU::MMU()
 {
     fill_n(mRam, RamSize, 0);
+    fill_n(mExternalRam, ExternalRamSize, 0);
     fill_n(mVRam, VRamSize, 0);
     fill_n(mBootableRom, BootableRomSize, 0);
     fill_n(mIORegisters, IORegistersSize, 0);
@@ -72,6 +73,8 @@ bool MMU::LoadRoms(const string &_cartridge, const string &_bootRom )
     cartridge.read((char*)mRom, mRomSize);
     cartridge.close();
 
+    mCartridgeType = mRom[0x147];
+
 	return true;
 }
 
@@ -127,13 +130,20 @@ u8* MMU::VirtAddrToPhysAddr(u16 _virtAddr) const
         return &mRom[_virtAddr];
 
     if ((_virtAddr >= Memory::RomBankNStartAddr) && (_virtAddr <= Memory::RomBankNEndAddr))
-        return &mRom[_virtAddr];
+    {
+        u8 bank = (mRomBank == 0) ? 1 : mRomBank;
+        return &mRom[Memory::RomStartAddr + (bank * 0x4000) + (_virtAddr - Memory::RomBankNStartAddr)];
+    }
 
     if ((_virtAddr >= Memory::VRamStartAddr) && (_virtAddr <= Memory::VRamEndAddr))
         return (u8*)&mVRam[_virtAddr - Memory::VRamStartAddr];
 
-    if ((_virtAddr >= Memory::RamStartAddr) && (_virtAddr <= Memory::RamEndAddr))
+    if (((_virtAddr >= Memory::RamStartAddr) && (_virtAddr <= Memory::RamEndAddr)) ||
+        ((_virtAddr >= Memory::RamMirrorStartAddr) && (_virtAddr <= Memory::RamMirrorEndAddr)))
         return (u8*)&mRam[_virtAddr - Memory::RamStartAddr];
+
+    if ((_virtAddr >= Memory::ExternalRamStartAddr) && (_virtAddr <= Memory::ExternalRamEndAddr))
+        return (u8*)&mExternalRam[_virtAddr - Memory::ExternalRamStartAddr];
 
     if ((_virtAddr >= Memory::OAMStartAddr) && (_virtAddr <= Memory::OAMEndAddr))
         return (u8*)&mOAM[_virtAddr - Memory::OAMStartAddr];
@@ -146,6 +156,10 @@ u8* MMU::VirtAddrToPhysAddr(u16 _virtAddr) const
 
     if (_virtAddr == Memory::InterruptsEnableRegister)
         return (u8*)&mIER;
+
+    //todo: temp
+    if (_virtAddr >= 0xF000 && _virtAddr <= 0xFDFF)
+        return (u8*)&mRam[_virtAddr - Memory::RamStartAddr];
 
     throw runtime_error("memory address unknown: " + Int2Hex(_virtAddr));
 }
@@ -170,4 +184,45 @@ bool MMU::IsValidAddr(u16 _virtAddr, bool _read) const
 void MMU::CopyMem(u16 _startAddr, u16 _destAddr, u16 _size)
 {
     memcpy(VirtAddrToPhysAddr(_destAddr), VirtAddrToPhysAddr(_startAddr), _size);
+}
+
+//--------------------------------------------
+// --
+//--------------------------------------------
+void MMU::WriteU8(u16 _virtAddr, u8 _value, bool _warnLinesteners)
+{
+    // MBC
+    if (_virtAddr >= Memory::RomRamModeSelectStartAddr && _virtAddr <= Memory::RomRamModeSelectEndAddr)
+    {
+        mRomBankingMode = _value == 0;
+        return;
+    }
+
+    if (_virtAddr >= Memory::RomBankNumberStartAddr && _virtAddr <= Memory::RomBankNumberEndAddr)
+    {
+        mRomBank = _value & 0x1F;
+        return;
+    }
+
+    if (_virtAddr >= Memory::RamBankNumberStartAddr && _virtAddr <= Memory::RamBankNumberEndAddr)
+    {
+        if (mRomBankingMode)
+            mRomBank |= _value & 0x60;
+        else
+            mRamBank = _value & 0x3;
+        return;
+    }
+
+    // ...
+    if (IsValidAddr(_virtAddr, false))
+    {
+        *VirtAddrToPhysAddr(_virtAddr) = _value;
+
+        if (_warnLinesteners)
+        {
+            mListeners[0]->OnMemoryWrittenU8(_virtAddr, _value);
+            mListeners[1]->OnMemoryWrittenU8(_virtAddr, _value);
+            mListeners[2]->OnMemoryWrittenU8(_virtAddr, _value);
+        }
+    }
 }

@@ -224,22 +224,18 @@ void GPU::RenderSprite(u8 _x, u8 _y, u8 _numTile, u8 _attr)
     u8 ir = 0;
     u8 fr = 8;
 
-    /*
-    if (_y < 16)
-        ir = 16 - _y;
+    if (_y < 8)
+        ir = 8 - _y;
     else if (_y >= Screen::Height)
         fr = Screen::Height - _y;
-    */
 
     u8 ic = 0;
     u8 fc = 8;
 
-    /*
     if (_x < 8)
         ic = 8 - _x;
     else if (_x >= Screen::Width)
         fc = Screen::Width - _x;
-    */
 
     // ...
     for (int r = ir; r < fr; ++r)
@@ -249,8 +245,10 @@ void GPU::RenderSprite(u8 _x, u8 _y, u8 _numTile, u8 _attr)
 
         for (int b = fc - 1; b >= ic; --b)
         {
+            bool palette1 = (_attr & (1 << 4)) == 1;
             u8 cp = (((b1 >> b) & 1) << 1) | ((b2 >> b) & 1);
-            mBuffer[((_y + r) * 256) + _x + (7 - b)] = cp;
+
+            mBuffer[((_y + r) * 256) + _x + (7 - b)] = palette1 ? mSprPalette1[cp] : mSprPalette0[cp];
         }
     }
 }
@@ -260,7 +258,12 @@ void GPU::RenderSprite(u8 _x, u8 _y, u8 _numTile, u8 _attr)
 //--------------------------------------------
 void GPU::RenderTile(u16 _tileDataAddr, u8 _numTile, u8 _x, u8 _y)
 {
-    u16 tileAddr = _tileDataAddr + (_numTile * 16);
+    u16 tileAddr;
+
+    if (_tileDataAddr == Memory::VRamTileData2StartAddr)
+        tileAddr = 0x9000 + ((i8)_numTile * 16);
+    else
+        tileAddr = _tileDataAddr + (_numTile * 16);
 
     for (int r = 0; r < 8; ++r)
     {
@@ -270,7 +273,7 @@ void GPU::RenderTile(u16 _tileDataAddr, u8 _numTile, u8 _x, u8 _y)
         for (int b = 7; b >= 0; --b)
         {
             u8 cp = (((b1 >> b) & 1) << 1) | ((b2 >> b) & 1);
-            mBuffer[((_y + r) * 256) + _x + (7 - b)] = cp;
+            mBuffer[((_y + r) * 256) + _x + (7 - b)] = mPalette[cp];
         }
     }
 }

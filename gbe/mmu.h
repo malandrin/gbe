@@ -19,25 +19,13 @@ public:
     // TODO: poner estas constantes en defines.h/Memory
 	static const int RamSize = 1024 * 8;
 	static const int VRamSize = 1024 * 8;
+    static const int ExternalRamSize = 1024 * 8;
 	static const int BootableRomSize = 256;
     static const int IORegistersSize = 128;
     static const int HighRamSize = 127;
     static const int OAMSize = 200;
 
-    inline void WriteU8(u16 _virtAdd, u8 _value, bool _warnLinesteners = true)
-    {
-        if (IsValidAddr(_virtAdd, false))
-        {
-            *VirtAddrToPhysAddr(_virtAdd) = _value;
-
-            if (_warnLinesteners)
-            {
-                mListeners[0]->OnMemoryWrittenU8(_virtAdd, _value);
-                mListeners[1]->OnMemoryWrittenU8(_virtAdd, _value);
-                mListeners[2]->OnMemoryWrittenU8(_virtAdd, _value);
-            }
-        }
-    }
+    void WriteU8(u16 _virtAdd, u8 _value, bool _warnLinesteners = true);
 
     inline u8 ReadU8(u16 _virtAdd) const
     {
@@ -66,6 +54,7 @@ public:
 	const u8* GetBootableRom() const {return mBootableRom;}
     const u8* GetRom() const {return mRom;}
 	const u8* GetRam() const {return mRam;}
+    const u8* GetExternalRam() const { return mExternalRam; }
 	const u8* GetVRam() const { return mVRam; }
     const u8* GetIORegisters() const { return mIORegisters; }
     const u8* GetHighRam() const { return mHighRam; }
@@ -91,6 +80,7 @@ private:
     bool IsValidAddr          (u16 _virtAddr, bool _read) const;
 
 	u8 mRam[RamSize];
+    u8 mExternalRam[ExternalRamSize];
 	u8 mVRam[VRamSize];
 	u8 mBootableRom[BootableRomSize];
     u8 mIORegisters[IORegistersSize];
@@ -98,6 +88,10 @@ private:
     u8 mOAM[OAMSize];
 	u8 *mRom {nullptr};
     u8 mIER { 0 }; // Interrups Enable Register
+    u8 mCartridgeType { 0 };
+    bool mRomBankingMode { true };
+    u8 mRomBank { 0 };
+    u8 mRamBank { 0 };
 	int mRomSize{0};
     bool mBootableRomEnabled {true};
     IMmuListener* mListeners[3] {nullptr};

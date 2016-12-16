@@ -49,7 +49,7 @@ void VRAMViewer::Render()
             case 0:
             case 1:
                 BuildTileData(mActiveVRam == 0 ? Memory::VRamTileData1StartAddr : Memory::VRamTileData2StartAddr);
-                ImGui::Image((ImTextureID)mTextureId, ImVec2(384, 384), ImVec2(0.0f, 0.0f), ImVec2(0.53125f, 0.53125f));
+                ImGui::Image((ImTextureID)mTextureId, ImVec2(384, 384), ImVec2(0.0f, 0.0f), ImVec2(0.5664f, 0.5664f));
                 break;
 
             case 2:
@@ -168,7 +168,12 @@ void VRAMViewer::BuildTileData(u16 _addr)
 //--------------------------------------------
 void VRAMViewer::RenderTile(u16 _tileDataAddr, u8 _numTile, u8 _x, u8 _y)
 {
-    u16 tileAddr = _tileDataAddr + (_numTile * 16);
+    u16 tileAddr;
+
+    if (_tileDataAddr == Memory::VRamTileData2StartAddr)
+        tileAddr = 0x9000 + ((i8)_numTile * 16);
+    else
+        tileAddr = _tileDataAddr + (_numTile * 16);
 
     for (int r = 0; r < 8; ++r)
     {

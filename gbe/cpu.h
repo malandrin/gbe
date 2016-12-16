@@ -36,6 +36,8 @@ public:
 	void Break		   () { mOnDebugMode = true; }
 	void Continue	   () { mOnDebugMode = false; }
 
+    void ExitStopped   () { mStopped = false; }
+
     void SetStateAfterBoot  ();
 
 private:

@@ -24,20 +24,23 @@ void Timer::Update(u8 _numCycles)
         mDivTimer -= 4;
     }
 
-    mTimaTimer += _numCycles;
-
-    if (mTimaTimer >= mTimerFreq)
+    if (mTimerEnabled)
     {
-        u16 value = mMmu.ReadU8(IOReg::TIMA);
-        value += 1;
+        mTimaTimer += _numCycles;
 
-        if (value > 255)
+        if (mTimaTimer >= mTimerFreq)
         {
-            mMmu.WriteU8(IOReg::IF, mMmu.ReadU8(IOReg::IF) | (1 << 2));
-            value = mMmu.ReadU8(IOReg::TAC);
-        }
+            u16 value = mMmu.ReadU8(IOReg::TIMA);
+            value += 1;
 
-        mMmu.WriteU8(IOReg::TIMA, (u8)value);
+            if (value > 255)
+            {
+                mMmu.WriteU8(IOReg::IF, mMmu.ReadU8(IOReg::IF) | (1 << 2));
+                value = mMmu.ReadU8(IOReg::TAC);
+            }
+
+            mMmu.WriteU8(IOReg::TIMA, (u8)value);
+        }
     }
 }
 

@@ -303,7 +303,7 @@ int CPU::InternalStep()
     if (mStopped)
         return 0;
 
-    int numCycles = 0;
+    int numCycles = 4;
 
     // ...
     if (!mHalted)
@@ -379,7 +379,7 @@ int CPU::InternalStep()
                 break;
 
             case 0x10: // STOP
-                mStopped = true; // TODO: hacer que cuando se presione un boton se salga de este estado
+                mStopped = true;
                 break;
 
             case 0x11: // LD DE, nn
@@ -493,27 +493,25 @@ int CPU::InternalStep()
                         if (!mFlagH)
                         {
                             if ((upper <= 8) && (lower >= 0xA))
-                                lower += 6;
+                                mRegA += 0x06;
                             else if ((upper >= 0xA) && (lower <= 9))
                             {
-                                upper += 6;
+                                mRegA += 0x06;
                                 mFlagC = true;
                             }
                             else if ((upper >= 9) && (lower >= 0xA))
                             {
-                                upper += 6;
-                                lower += 6;
+                                mRegA += 0x66;
                                 mFlagC = true;
                             }
                         }
                         else 
                         {
                             if ((upper <= 9) && (lower <= 3))
-                                lower += 6;
+                                mRegA += 0x06;
                             else if ((upper >= 0xA) && (lower <= 3))
                             {
-                                upper += 6;
-                                lower += 6;
+                                mRegA += 0x66;
                                 mFlagC = true;
                             }
                         }
@@ -521,12 +519,11 @@ int CPU::InternalStep()
                     else
                     {
                         if (!mFlagH && (upper <= 2) && (lower <= 9))
-                            upper += 6;
+                            mRegA += 0x06;
+                        else if (!mFlagH && (upper <= 2) && (lower >= 0xA))
+                            mRegA += 0x66;
                         else if (mFlagH && (upper <= 3) && (lower <= 3))
-                        {
-                            upper += 6;
-                            lower += 6;
-                        }
+                            mRegA += 0x66;
                     }
                 }
                 else 
@@ -534,28 +531,22 @@ int CPU::InternalStep()
                     if (!mFlagC)
                     {
                         if (mFlagH && (upper <= 8) && (lower >= 6))
-                        {
-                            upper += 0xF;
-                            lower += 0xA;
-                        }
+                            mRegA += 0xFA;
                     }
                     else 
                     {
                         if (!mFlagH && (upper >= 7) && (lower <= 9))
                         {
-                            upper += 0xA;
+                            mRegA += 0xA0;
                             mFlagC = true;
                         }
                         else if (mFlagH && (upper >= 6) && (lower >= 6))
                         {
-                            upper += 9;
-                            lower += 0xA;
+                            mRegA += 0x9A;
                             mFlagC = true;
                         }
                     }
                 }
-
-                mRegA = (upper << 4) | lower;
             }
             break;
 
