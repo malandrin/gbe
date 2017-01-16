@@ -3,6 +3,7 @@
 #define _MMU_H
 
 #include "mmu_listener.h"
+#include "cartridge.h"
 
 class MMUDummyListener : public IMmuListener
 {
@@ -19,7 +20,6 @@ public:
     // TODO: poner estas constantes en defines.h/Memory
 	static const int RamSize = 1024 * 8;
 	static const int VRamSize = 1024 * 8;
-    static const int ExternalRamSize = 1024 * 8;
 	static const int BootableRomSize = 256;
     static const int IORegistersSize = 128;
     static const int HighRamSize = 127;
@@ -51,20 +51,21 @@ public:
 
     void CopyMem    (u16 _startAddr, u16 _destAddr, u16 _size);
 
-	const u8* GetBootableRom() const {return mBootableRom;}
-    const u8* GetRom() const {return mRom;}
+	const u8* GetBootableRom() const { return mBootableRom;}
+    const u8* GetRom() const { return (mCartridge != nullptr) ? mCartridge->GetRom() : nullptr;}
 	const u8* GetRam() const {return mRam;}
-    const u8* GetExternalRam() const { return mExternalRam; }
+    const u8* GetExternalRam() const { return (mCartridge != nullptr) ? mCartridge->GetRam() : nullptr; }
 	const u8* GetVRam() const { return mVRam; }
     const u8* GetIORegisters() const { return mIORegisters; }
     const u8* GetHighRam() const { return mHighRam; }
 
-	bool LoadRoms   (const string& _cartridge, const string &_bootRom);
+	//bool LoadRoms   (const string& _cartridge, const string &_bootRom);
+    void OnCartridgeInserted  (Cartridge *_cartridge) { mCartridge = _cartridge; }
 
-	int  GetRomSize () const {return mRomSize;}
+	int  GetRomSize () const { return (mCartridge != nullptr) ? mCartridge->GetRomSize() : 0;}
 
-    const u8* GetActiveRom() const { return mBootableRomEnabled ? mBootableRom : mRom; }
-    int GetActiveRomSize() const { return mBootableRomEnabled ? BootableRomSize : mRomSize; }
+    const u8* GetActiveRom() const { return mBootableRomEnabled ? mBootableRom : GetRom(); }
+    int GetActiveRomSize() const { return mBootableRomEnabled ? BootableRomSize : GetRomSize(); }
     u16 GetActiveRomEntryAddr() const { return mBootableRomEnabled ? 0 : 0x100; }
 
     bool IsInBootableRom     () const {return mBootableRomEnabled;}
@@ -79,20 +80,14 @@ private:
     u8*  VirtAddrToPhysAddr   (u16 _virtAddr) const;
     bool IsValidAddr          (u16 _virtAddr, bool _read) const;
 
+    Cartridge *mCartridge { nullptr };
 	u8 mRam[RamSize];
-    u8 mExternalRam[ExternalRamSize];
 	u8 mVRam[VRamSize];
 	u8 mBootableRom[BootableRomSize];
     u8 mIORegisters[IORegistersSize];
     u8 mHighRam[HighRamSize];
     u8 mOAM[OAMSize];
-	u8 *mRom {nullptr};
     u8 mIER { 0 }; // Interrups Enable Register
-    u8 mCartridgeType { 0 };
-    bool mRomBankingMode { true };
-    u8 mRomBank { 0 };
-    u8 mRamBank { 0 };
-	int mRomSize{0};
     bool mBootableRomEnabled {true};
     IMmuListener* mListeners[3] {nullptr};
     MMUDummyListener* mDummyListener {nullptr};

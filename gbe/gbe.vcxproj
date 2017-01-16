@@ -156,6 +156,7 @@
     <ClCompile Include="..\3rdparty\imgui\imgui_draw.cpp" />
     <ClCompile Include="..\3rdparty\imgui\imgui_impl_sdl.cpp" />
     <ClCompile Include="base.cpp" />
+    <ClCompile Include="cartridge.cpp" />
     <ClCompile Include="cpu.cpp" />
     <ClCompile Include="debugger.cpp" />
     <ClCompile Include="gb.cpp" />
@@ -176,6 +177,7 @@
   <ItemGroup>
     <ClInclude Include="..\3rdparty\imgui\imgui.h" />
     <ClInclude Include="base.h" />
+    <ClInclude Include="cartridge.h" />
     <ClInclude Include="cpu.h" />
     <ClInclude Include="cpu_runnable.h" />
     <ClInclude Include="debugger.h" />

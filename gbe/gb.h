@@ -8,19 +8,22 @@
 #include "joypad.h"
 #include "timer.h"
 
+class Cartridge;
+
 class GB
 {
 public:
 
-                GB         () : mCpu(mMmu, mTimer), mGpu(mCpu, mMmu), mJoypad(mMmu), mTimer(mMmu) {}
+                GB              () : mCpu(mMmu, mTimer), mGpu(mCpu, mMmu), mJoypad(mMmu), mTimer(mMmu) {}
 
-    void        PowerUp    (const string& _cartridge, const string& _bootRom);
-    int         Step       ();
+    void        PowerUp         (Cartridge *_cartridge);
+    int         Step            ();
 
-    const MMU&  GetMmu     () const { return mMmu; }
-    CPU&        GetCpu     () { return mCpu; }
-    GPU&        GetGpu     () { return mGpu; }
-    Joypad&     GetJoypad  () { return mJoypad; }
+    const MMU&  GetMmu          () const { return mMmu; }
+    CPU&        GetCpu          () { return mCpu; }
+    GPU&        GetGpu          () { return mGpu; }
+    Joypad&     GetJoypad       () { return mJoypad; }
+    Cartridge*  GetCartridge    () { return mCartridge; }
 
 private:
 	MMU     mMmu;
@@ -28,6 +31,7 @@ private:
     GPU     mGpu;
     Joypad  mJoypad;
     Timer   mTimer;
+    Cartridge *mCartridge { nullptr };
 };
 
 #endif

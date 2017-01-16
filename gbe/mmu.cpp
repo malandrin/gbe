@@ -11,7 +11,6 @@
 MMU::MMU()
 {
     fill_n(mRam, RamSize, 0);
-    fill_n(mExternalRam, ExternalRamSize, 0);
     fill_n(mVRam, VRamSize, 0);
     fill_n(mBootableRom, BootableRomSize, 0);
     fill_n(mIORegisters, IORegistersSize, 0);
@@ -29,9 +28,6 @@ MMU::MMU()
 //--------------------------------------------
 MMU::~MMU()
 {
-    if (mRom != nullptr)
-        delete[] mRom;
-
     delete mDummyListener;
 }
 
@@ -50,6 +46,7 @@ void MMU::AddListener(IMmuListener* _listener)
         mListeners[2] = _listener;
 }
 
+/*
 //--------------------------------------------
 // --
 //--------------------------------------------
@@ -62,21 +59,9 @@ bool MMU::LoadRoms(const string &_cartridge, const string &_bootRom )
         bootable.close();
     }
 
-    // ...
-    ifstream cartridge(_cartridge, ios::binary);
-
-    cartridge.seekg(0, cartridge.end);
-	mRomSize = (int)cartridge.tellg();
-    cartridge.seekg(0, cartridge.beg);
-
-    mRom = new u8[mRomSize];
-    cartridge.read((char*)mRom, mRomSize);
-    cartridge.close();
-
-    mCartridgeType = mRom[0x147];
-
 	return true;
 }
+*/
 
 //--------------------------------------------
 // --
@@ -127,13 +112,10 @@ u8* MMU::VirtAddrToPhysAddr(u16 _virtAddr) const
         return (u8*)&mBootableRom[_virtAddr];
 
     if ((_virtAddr >= Memory::RomStartAddr) && (_virtAddr <= Memory::RomEndAddr))
-        return &mRom[_virtAddr];
+        return mCartridge->GetRom(_virtAddr);
 
     if ((_virtAddr >= Memory::RomBankNStartAddr) && (_virtAddr <= Memory::RomBankNEndAddr))
-    {
-        u8 bank = (mRomBank == 0) ? 1 : mRomBank;
-        return &mRom[Memory::RomStartAddr + (bank * 0x4000) + (_virtAddr - Memory::RomBankNStartAddr)];
-    }
+        return mCartridge->GetBankRom(_virtAddr);
 
     if ((_virtAddr >= Memory::VRamStartAddr) && (_virtAddr <= Memory::VRamEndAddr))
         return (u8*)&mVRam[_virtAddr - Memory::VRamStartAddr];
@@ -143,7 +125,7 @@ u8* MMU::VirtAddrToPhysAddr(u16 _virtAddr) const
         return (u8*)&mRam[_virtAddr - Memory::RamStartAddr];
 
     if ((_virtAddr >= Memory::ExternalRamStartAddr) && (_virtAddr <= Memory::ExternalRamEndAddr))
-        return (u8*)&mExternalRam[_virtAddr - Memory::ExternalRamStartAddr];
+        return (u8*)&mCartridge->GetRam()[_virtAddr - Memory::ExternalRamStartAddr];
 
     if ((_virtAddr >= Memory::OAMStartAddr) && (_virtAddr <= Memory::OAMEndAddr))
         return (u8*)&mOAM[_virtAddr - Memory::OAMStartAddr];
@@ -192,37 +174,18 @@ void MMU::CopyMem(u16 _startAddr, u16 _destAddr, u16 _size)
 void MMU::WriteU8(u16 _virtAddr, u8 _value, bool _warnLinesteners)
 {
     // MBC
-    if (_virtAddr >= Memory::RomRamModeSelectStartAddr && _virtAddr <= Memory::RomRamModeSelectEndAddr)
+    if (!mCartridge->WriteU8(_virtAddr, _value))
     {
-        mRomBankingMode = _value == 0;
-        return;
-    }
-
-    if (_virtAddr >= Memory::RomBankNumberStartAddr && _virtAddr <= Memory::RomBankNumberEndAddr)
-    {
-        mRomBank = _value & 0x1F;
-        return;
-    }
-
-    if (_virtAddr >= Memory::RamBankNumberStartAddr && _virtAddr <= Memory::RamBankNumberEndAddr)
-    {
-        if (mRomBankingMode)
-            mRomBank |= _value & 0x60;
-        else
-            mRamBank = _value & 0x3;
-        return;
-    }
-
-    // ...
-    if (IsValidAddr(_virtAddr, false))
-    {
-        *VirtAddrToPhysAddr(_virtAddr) = _value;
-
-        if (_warnLinesteners)
+        if (IsValidAddr(_virtAddr, false))
         {
-            mListeners[0]->OnMemoryWrittenU8(_virtAddr, _value);
-            mListeners[1]->OnMemoryWrittenU8(_virtAddr, _value);
-            mListeners[2]->OnMemoryWrittenU8(_virtAddr, _value);
+            *VirtAddrToPhysAddr(_virtAddr) = _value;
+
+            if (_warnLinesteners)
+            {
+                mListeners[0]->OnMemoryWrittenU8(_virtAddr, _value);
+                mListeners[1]->OnMemoryWrittenU8(_virtAddr, _value);
+                mListeners[2]->OnMemoryWrittenU8(_virtAddr, _value);
+            }
         }
     }
 }

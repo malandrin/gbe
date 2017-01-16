@@ -94,3 +94,8 @@ namespace IOReg
     static const u16 OBP1 = 0xFF49; // Object Palette 1 Data
     static const u16 IE = 0xFFFF;   // Interrupt Enable
 }
+
+namespace Size
+{
+    static const int ExternalRam = 1024 * 8;
+}

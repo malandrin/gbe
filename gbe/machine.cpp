@@ -13,7 +13,7 @@
 //--------------------------------------------
 Machine::Machine(GB& _gb) : mGb(_gb), mCpu(_gb.GetCpu()), mGpu(_gb.GetGpu())
 {
-	mWindow = SDL_CreateWindow("GBE", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, Screen::Width << 1, Screen::Height << 1, SDL_WINDOW_OPENGL);
+	mWindow = SDL_CreateWindow(("GBE - " + _gb.GetCartridge()->GetTitle()).c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, Screen::Width << 1, Screen::Height << 1, SDL_WINDOW_OPENGL);
     mRenderer = SDL_CreateRenderer(mWindow, -1, SDL_RENDERER_ACCELERATED);
 
     mTexture = SDL_CreateTexture(mRenderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STREAMING, Screen::Width, Screen::Height);

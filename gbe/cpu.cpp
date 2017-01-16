@@ -682,7 +682,7 @@ int CPU::InternalStep()
             case 0x40: // LD B, B
                 break;
 
-            case 0x41:
+            case 0x41: // LD B, C
                 mRegBC.b = mRegBC.c;
                 break;
 
@@ -1186,10 +1186,7 @@ int CPU::InternalStep()
 
             case 0xC0: // RET NZ
                 if (!mFlagZ)
-                {
                     mRegPC = Pop();
-                    ManageEndInterrupt();
-                }
                 break;
 
             case 0xC1: // POP BC
@@ -1237,15 +1234,11 @@ int CPU::InternalStep()
 
             case 0xC8: // RET Z
                 if (mFlagZ)
-                {
                     mRegPC = Pop();
-                    ManageEndInterrupt();
-                }
                 break;
 
             case 0xC9: // RET
                 mRegPC = Pop();
-                ManageEndInterrupt();
                 break;
 
             case 0xCA: // JP Z, nn
@@ -1290,10 +1283,7 @@ int CPU::InternalStep()
 
             case 0xD0: // RET NC
                 if (!mFlagC)
-                {
                     mRegPC = Pop();
-                    ManageEndInterrupt();
-                }
                 break;
 
             case 0xD1: // POP DE
@@ -1337,15 +1327,11 @@ int CPU::InternalStep()
 
             case 0xD8: // RET C
                 if (mFlagC)
-                {
                     mRegPC = Pop();
-                    ManageEndInterrupt();
-                }
                 break;
 
             case 0xD9: // RETI
                 mRegPC = Pop();
-                ManageEndInterrupt();
                 mIME = true;
                 break;
 
@@ -1501,7 +1487,7 @@ int CPU::InternalStep()
                 break;
 
             default:
-                throw runtime_error("opcode unknown: " + Int2Hex(opcode));
+                cout << "opcode unknown: " << Int2Hex(opcode) << endl;
                 break;
         }
 
@@ -1533,9 +1519,7 @@ int CPU::InternalStep()
 
             for (int i = 0; i < 5; ++i)
             {
-                ManageInterrupt(i, addresses[i], iflags, ienable);
-
-                if (mMI)
+                if (ManageInterrupt(i, addresses[i], iflags, ienable))
                 {
                     numCycles += 24;
                     mHalted = false;
@@ -1584,61 +1568,20 @@ void CPU::SetFlagsFromU8(u8 _val)
 //--------------------------------------------
 // --
 //--------------------------------------------
-void CPU::ManageInterrupt(int _interruptBit, u16 _interruptAddr, u8 _iflags, u8 _ienable)
+bool CPU::ManageInterrupt(int _interruptBit, u16 _interruptAddr, u8 _iflags, u8 _ienable)
 {
     int interrupt = (1 << _interruptBit);
 
     if ((_iflags & interrupt) && (_ienable & interrupt))
     {
         mIME = false;
-        mMI = true;
         Push(mRegPC);
         mRegPC = _interruptAddr;
         mMmu.WriteU8(IOReg::IF, _iflags & ~interrupt);
-        SaveRegisters();
+        return true;
     }
-}
 
-//--------------------------------------------
-// --
-//--------------------------------------------
-void CPU::ManageEndInterrupt()
-{
-    if (mMI)
-    {
-        mMI = false;
-        RestoreRegisters();
-    }
-}
-
-//--------------------------------------------
-// --
-//--------------------------------------------
-void CPU::SaveRegisters()
-{
-    mRegASaved = mRegA;
-    mRegBCSaved = mRegBC;
-    mRegDESaved = mRegDE;
-    mRegHLSaved = mRegHL;
-    mFlagZSaved = mFlagZ;
-    mFlagNSaved = mFlagN;
-    mFlagHSaved = mFlagH;
-    mFlagCSaved = mFlagC;
-}
-
-//--------------------------------------------
-// --
-//--------------------------------------------
-void CPU::RestoreRegisters()
-{
-    mRegA  = mRegASaved;
-    mRegBC = mRegBCSaved;
-    mRegDE = mRegDESaved;
-    mRegHL = mRegHLSaved;
-    mFlagZ = mFlagZSaved;
-    mFlagN = mFlagNSaved;
-    mFlagH = mFlagHSaved;
-    mFlagC = mFlagCSaved;
+    return false;
 }
 
 //--------------------------------------------

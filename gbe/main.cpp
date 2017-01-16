@@ -7,6 +7,7 @@
 #include "defines.h"
 #include "debugger.h"
 #include "cpu_runnable.h"
+#include "cartridge.h"
 
 int main(int argn, char *argv[])
 {
@@ -47,7 +48,9 @@ int main(int argn, char *argv[])
 
 	// ...
 	GB gb;
-	gb.PowerUp(argv[1], bootRom);
+    Cartridge cartridge(argv[1]);
+
+	gb.PowerUp(&cartridge);
 
 	unique_ptr<Debugger> debugger {nullptr};
 
