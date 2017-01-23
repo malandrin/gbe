@@ -23,7 +23,7 @@ public:
 	static const int BootableRomSize = 256;
     static const int IORegistersSize = 128;
     static const int HighRamSize = 127;
-    static const int OAMSize = 200;
+    static const int OAMSize = 160;
 
     void WriteU8(u16 _virtAdd, u8 _value, bool _warnLinesteners = true);
 
@@ -51,13 +51,14 @@ public:
 
     void CopyMem    (u16 _startAddr, u16 _destAddr, u16 _size);
 
-	const u8* GetBootableRom() const { return mBootableRom;}
-    const u8* GetRom() const { return (mCartridge != nullptr) ? mCartridge->GetRom() : nullptr;}
-	const u8* GetRam() const {return mRam;}
-    const u8* GetExternalRam() const { return (mCartridge != nullptr) ? mCartridge->GetRam() : nullptr; }
-	const u8* GetVRam() const { return mVRam; }
-    const u8* GetIORegisters() const { return mIORegisters; }
-    const u8* GetHighRam() const { return mHighRam; }
+	const u8 *GetBootableRom() const { return mBootableRom;}
+    const u8 *GetRom() const { return (mCartridge != nullptr) ? mCartridge->GetRom() : nullptr;}
+	const u8 *GetRam() const {return mRam;}
+    const u8 *GetExternalRam() const { return (mCartridge != nullptr) ? mCartridge->GetRam() : nullptr; }
+	const u8 *GetVRam() const { return mVRam; }
+    const u8 *GetIORegisters() const { return mIORegisters; }
+    const u8 *GetHighRam() const { return mHighRam; }
+    const u8 *GetOAM() const { return mOAM; }
 
 	//bool LoadRoms   (const string& _cartridge, const string &_bootRom);
     void OnCartridgeInserted  (Cartridge *_cartridge) { mCartridge = _cartridge; }
@@ -67,6 +68,9 @@ public:
     const u8* GetActiveRom() const { return mBootableRomEnabled ? mBootableRom : GetRom(); }
     int GetActiveRomSize() const { return mBootableRomEnabled ? BootableRomSize : GetRomSize(); }
     u16 GetActiveRomEntryAddr() const { return mBootableRomEnabled ? 0 : 0x100; }
+
+    u8  GetRomBank() const { return (mCartridge != nullptr) ? mCartridge->GetRomBank() : 0; }
+    u8  GetRamBank() const { return (mCartridge != nullptr) ? mCartridge->GetRamBank() : 0; }
 
     bool IsInBootableRom     () const {return mBootableRomEnabled;}
     void DisableBootableRom  () {mBootableRomEnabled = false;}

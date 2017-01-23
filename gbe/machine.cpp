@@ -4,14 +4,14 @@
 #include "defines.h"
 #include "gb.h"
 #include "cpu.h"
-#include "gpu.h"
+#include "ppu.h"
 #include "joypad.h"
 #include "machine.h"
 
 //--------------------------------------------
 // --
 //--------------------------------------------
-Machine::Machine(GB& _gb) : mGb(_gb), mCpu(_gb.GetCpu()), mGpu(_gb.GetGpu())
+Machine::Machine(GB& _gb) : mGb(_gb), mCpu(_gb.GetCpu()), mPpu(_gb.GetPpu())
 {
 	mWindow = SDL_CreateWindow(("GBE - " + _gb.GetCartridge()->GetTitle()).c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, Screen::Width << 1, Screen::Height << 1, SDL_WINDOW_OPENGL);
     mRenderer = SDL_CreateRenderer(mWindow, -1, SDL_RENDERER_ACCELERATED);
@@ -50,9 +50,9 @@ void Machine::Render()
 {
     SDL_RenderClear(mRenderer);
 
-    if (mGpu.IsLCDOn())
+    if (mPpu.IsLCDOn())
     {
-        SDL_UpdateTexture(mTexture, nullptr, mGpu.GetFrameBuffer(), Screen::Width * 4);
+        SDL_UpdateTexture(mTexture, nullptr, mPpu.GetFrameBuffer(), Screen::Width * 4);
         SDL_RenderCopy(mRenderer, mTexture, nullptr, nullptr);
     }
 

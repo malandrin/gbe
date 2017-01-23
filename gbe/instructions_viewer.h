@@ -19,35 +19,39 @@ public:
 
 private:
 
-    struct InstructionLine
+    struct MemBlockInfo
     {
-        InstructionLine(int _a, int _nb, string& _ac)
+        struct Line
         {
-            addr = _a;
-            numBytes = _nb;
-            asmCode = _ac;
-        }
+            Line (u16 _a, u8 _nb, string &_ac) : addr(_a), numBytes(_nb), asmCode(_ac) { }
 
-        int addr;
-        int numBytes;
-        string asmCode;
+            u16 addr { 0 };
+            u8  numBytes { 0 };
+            string asmCode { "" };
+        };
+
+        u16 addr { 0 };
+        string name { "" };
+        vector<Line> lines;
+        int *addr2Line { nullptr };
     };
 
     GB                      &mGb;
     ROMWalker               mROMWalker;
-    vector<InstructionLine> mInstructionLines;
     int                     mSelectedLineIdx {-1};
     int                     mActiveLineIdx {0};
     int                     mPrevActiveLineIdx {0};
-    int                     mAddrDigitCount;
-    int                    *mPCLineInfo {nullptr};
-    int                     mRomSize {0};
+    int                     mTotalNumLines{ 0 };
     bool                    mHighRamWalked {false};
+    MemBlockInfo           *mMemBlocksInfo { nullptr };
+    int                     mNumBlocksInfo { 0 };
+    u8                      mPrevRomBank { 0 };
     Debugger               &mDebugger;
 
-	void CalculateInstructionLines  ();
-    void ToggleBreakpoint           (u16 _addr);
-    void ParseMemory                (int _addr, int _size);
+    void            ToggleBreakpoint           (MemBlockInfo *_info, u16 _addr);
+    void            CreateMemBlockInfo         ();
+    void            CreateBlockInfo            (MemBlockInfo *_info, u16 _virtAddr, int _size, const string &_name, const u8 *_mem, u16 _realAddr);
+    MemBlockInfo   *GetMemBlockInfoByLine      (int _line, int &_blockInitialLine);
 };
 
 #endif

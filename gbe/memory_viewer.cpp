@@ -46,7 +46,7 @@ void MemoryViewer::Render()
 				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
 
 			int addr = memInfo->baseAddr + ((i - memInfo->lineStart) * mNumCols);
-			ImGui::Text((memInfo->memType + ":%0*X: ").c_str(), mAddrDigitCount, addr);
+			ImGui::Text((memInfo->memType + ":%0*X: ").c_str(), 4, addr);
 			ImGui::SameLine();
 
 			float lineStartX = ImGui::GetCursorPosX();
@@ -103,6 +103,9 @@ void MemoryViewer::CalculateMemInfo()
 	// ram
 	mMemInfo.push_back(MemInfo(mMmu.GetRam(), MMU::RamSize, Memory::RamStartAddr, mMemInfo[mMemInfo.size() - 1].lineEnd, string(" RAM")));
 
+    // OAM
+    mMemInfo.push_back(MemInfo(mMmu.GetOAM(), MMU::OAMSize, Memory::OAMStartAddr, mMemInfo[mMemInfo.size() - 1].lineEnd, string( " OAM")));
+
 	// IO registers
 	mMemInfo.push_back(MemInfo(mMmu.GetIORegisters(), MMU::IORegistersSize, Memory::IORegsStartAddr, mMemInfo[mMemInfo.size() - 1].lineEnd, string("IORG")));
 
@@ -110,12 +113,7 @@ void MemoryViewer::CalculateMemInfo()
 	mMemInfo.push_back(MemInfo(mMmu.GetHighRam(), MMU::HighRamSize, Memory::HighRamStartAddr, mMemInfo[mMemInfo.size() - 1].lineEnd, string("HRAM")));
 
 	// ...
-	mAddrDigitCount = 0;
 	int numMemInfo = mMemInfo.size() - 1;
-
-	for (int n = mMemInfo[numMemInfo].baseAddr + mMemInfo[numMemInfo].size - 1; n > 0; n >>= 4)
-		++mAddrDigitCount;
-
 	mLineTotalCount = 0;
 	mMemSize = mMemInfo[numMemInfo].baseAddr + mMemInfo[numMemInfo].size;
 

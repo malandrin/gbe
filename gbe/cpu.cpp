@@ -158,7 +158,7 @@ void CPU::IncReg(u8 &_reg)
 //--------------------------------------------
 void CPU::DecReg(u8 &_reg)
 {
-    mFlagH = ((_reg & 0x0F) - 1) > 15;
+    mFlagH = ((_reg & 0x0F) - 1) < 0;
     --_reg;
     mFlagZ = (_reg == 0);
     mFlagN = true;
@@ -169,8 +169,8 @@ void CPU::DecReg(u8 &_reg)
 //--------------------------------------------
 void CPU::SubRegA(u8 _val)
 {
-    mFlagC = (mRegA - _val) > 255;
-    mFlagH = ((mRegA & 0x0F) - (_val & 0x0F)) > 15;
+    mFlagC = (mRegA - _val) < 0;
+    mFlagH = ((mRegA & 0x0F) - (_val & 0x0F)) < 0;
     mRegA -= _val;
     mFlagZ = (mRegA == 0);
     mFlagN = true;
@@ -265,7 +265,7 @@ void CPU::RotateLeft(u8 &_reg)
 void CPU::RotateLeftC(u8 &_reg)
 {
     mFlagC = (_reg & 0b10000000) != 0;
-    _reg = _reg << 1;
+    _reg = (_reg << 1) | (mFlagC ? 1 : 0);
     mFlagZ = _reg == 0;
     mFlagN = false;
     mFlagH = false;
@@ -278,8 +278,9 @@ void CPU::RotateRight(u8 &_reg)
 {
     mFlagN = false;
     mFlagH = false;
+    u8 cb = mFlagC ? 1 : 0;
     mFlagC = (_reg & 1) != 0;
-    _reg = (_reg >> 1) | ((mFlagC ? 1 : 0) << 7);
+    _reg = (_reg >> 1) | (cb << 7);
     mFlagZ = _reg == 0;
 }
 
@@ -289,7 +290,7 @@ void CPU::RotateRight(u8 &_reg)
 void CPU::RotateRightC(u8 &_reg)
 {
     mFlagC = (_reg & 1) != 0;
-    _reg = _reg >> 1;
+    _reg = (_reg >> 1) | ((mFlagC ? 1 : 0) << 7);
     mFlagZ = _reg == 0;
     mFlagN = false;
     mFlagH = false;
@@ -1628,102 +1629,30 @@ int CPU::ProcessCb(u8 _opcode)
             break;
 
         case 0x08: // RRC B
-            RotateRight(mRegBC.b);
-            break;
-
-        case 0x09: // RRC C
-            RotateRight(mRegBC.c);
-            break;
-
-        case 0x0A: // RRC D
-            RotateRight(mRegDE.d);
-            break;
-
-        case 0x0B: // RRC E
-            RotateRight(mRegDE.e);
-            break;
-
-        case 0x0C: // RRC H
-            RotateRight(mRegHL.h);
-            break;
-
-        case 0x0D: // RRC L
-            RotateRight(mRegHL.l);
-            break;
-
-        case 0x0E: // RRC (HL)
-        {
-            u8 temp = mMmu.ReadU8(mRegHL.hl);
-            RotateRight(temp);
-            mMmu.WriteU8(mRegHL.hl, temp);
-        }
-        break;
-
-        case 0x0F: // RRC A
-            RotateRight(mRegA);
-            break;
-
-        case 0x10: // RL B
-            RotateLeftC(mRegBC.b);
-            break;
-
-        case 0x11: // RL C
-            RotateLeftC(mRegBC.c);
-            break;
-
-        case 0x12: // RL D
-            RotateLeftC(mRegDE.d);
-            break;
-
-        case 0x13: // RL E
-            RotateLeftC(mRegDE.e);
-            break;
-
-        case 0x14: // RL H
-            RotateLeftC(mRegHL.h);
-            break;
-
-        case 0x15: // RL L
-            RotateLeftC(mRegHL.l);
-            break;
-
-        case 0x16: // RL (HL)
-        {
-            u8 temp = mMmu.ReadU8(mRegHL.hl);
-            RotateLeftC(temp);
-            mMmu.WriteU8(mRegHL.hl, temp);
-        }
-        break;
-
-        case 0x17: // RL A
-            RotateLeftC(mRegA);
-            break;
-
-        case 0x18: // RR B
             RotateRightC(mRegBC.b);
             break;
 
-        case 0x19: // RR C
+        case 0x09: // RRC C
             RotateRightC(mRegBC.c);
             break;
 
-        case 0x1A: // RR D
+        case 0x0A: // RRC D
             RotateRightC(mRegDE.d);
             break;
 
-        case 0x1B: // RR E
+        case 0x0B: // RRC E
             RotateRightC(mRegDE.e);
             break;
 
-        case 0x1C: // RR H
+        case 0x0C: // RRC H
             RotateRightC(mRegHL.h);
             break;
 
-        case 0x1D: // RR L
+        case 0x0D: // RRC L
             RotateRightC(mRegHL.l);
             break;
 
-        case 0x1E: // RR (HL)
+        case 0x0E: // RRC (HL)
         {
             u8 temp = mMmu.ReadU8(mRegHL.hl);
             RotateRightC(temp);
@@ -1731,8 +1660,80 @@ int CPU::ProcessCb(u8 _opcode)
         }
         break;
 
-        case 0x1F: // RR A
+        case 0x0F: // RRC A
             RotateRightC(mRegA);
+            break;
+
+        case 0x10: // RL B
+            RotateLeft(mRegBC.b);
+            break;
+
+        case 0x11: // RL C
+            RotateLeft(mRegBC.c);
+            break;
+
+        case 0x12: // RL D
+            RotateLeft(mRegDE.d);
+            break;
+
+        case 0x13: // RL E
+            RotateLeft(mRegDE.e);
+            break;
+
+        case 0x14: // RL H
+            RotateLeft(mRegHL.h);
+            break;
+
+        case 0x15: // RL L
+            RotateLeft(mRegHL.l);
+            break;
+
+        case 0x16: // RL (HL)
+        {
+            u8 temp = mMmu.ReadU8(mRegHL.hl);
+            RotateLeft(temp);
+            mMmu.WriteU8(mRegHL.hl, temp);
+        }
+        break;
+
+        case 0x17: // RL A
+            RotateLeft(mRegA);
+            break;
+
+        case 0x18: // RR B
+            RotateRight(mRegBC.b);
+            break;
+
+        case 0x19: // RR C
+            RotateRight(mRegBC.c);
+            break;
+
+        case 0x1A: // RR D
+            RotateRight(mRegDE.d);
+            break;
+
+        case 0x1B: // RR E
+            RotateRight(mRegDE.e);
+            break;
+
+        case 0x1C: // RR H
+            RotateRight(mRegHL.h);
+            break;
+
+        case 0x1D: // RR L
+            RotateRight(mRegHL.l);
+            break;
+
+        case 0x1E: // RR (HL)
+        {
+            u8 temp = mMmu.ReadU8(mRegHL.hl);
+            RotateRight(temp);
+            mMmu.WriteU8(mRegHL.hl, temp);
+        }
+        break;
+
+        case 0x1F: // RR A
+            RotateRight(mRegA);
             break;
 
         case 0x20: // SLA B

@@ -3,14 +3,14 @@
 #include "mmu.h"
 #include "cpu.h"
 #include "defines.h"
-#include "gpu.h"
+#include "ppu.h"
 
 static u32 mColors[4] {0x9BBC0F, 0x8BAC0F, 0x306230, 0x0F380F};
 
 //--------------------------------------------
 // --
 //--------------------------------------------
-GPU::GPU(CPU &_cpu, MMU &_mmu) : mMmu(_mmu)
+PPU::PPU(CPU &_cpu, MMU &_mmu) : mMmu(_mmu)
 {
     _mmu.AddListener(this);
 }
@@ -18,7 +18,7 @@ GPU::GPU(CPU &_cpu, MMU &_mmu) : mMmu(_mmu)
 //--------------------------------------------
 // --
 //--------------------------------------------
-void GPU::OnMemoryWrittenU8(u16 _virtAddr, u8 _value)
+void PPU::OnMemoryWrittenU8(u16 _virtAddr, u8 _value)
 {
     // IO registers
     switch(_virtAddr)
@@ -88,14 +88,14 @@ void GPU::OnMemoryWrittenU8(u16 _virtAddr, u8 _value)
 //--------------------------------------------
 // --
 //--------------------------------------------
-void GPU::OnMemoryWrittenU16(u16 _virtAddr, u16 _value)
+void PPU::OnMemoryWrittenU16(u16 _virtAddr, u16 _value)
 {
 }
 
 //--------------------------------------------
 // --
 //--------------------------------------------
-void GPU::OnStep(int _numCycles)
+void PPU::OnStep(int _numCycles)
 {
     mCycles += _numCycles;
 
@@ -154,7 +154,7 @@ void GPU::OnStep(int _numCycles)
 //--------------------------------------------
 // --
 //--------------------------------------------
-void GPU::UpdateFrameBuffer()
+void PPU::UpdateFrameBuffer()
 {
     if (mBGWindowDisplayOn)
     {
@@ -210,7 +210,7 @@ void GPU::UpdateFrameBuffer()
 //--------------------------------------------
 // --
 //--------------------------------------------
-void GPU::RenderSprite(u8 _x, u8 _y, u8 _numTile, u8 _attr)
+void PPU::RenderSprite(u8 _x, u8 _y, u8 _numTile, u8 _attr)
 {
     u16 tileAddr = Memory::VRamTileData1StartAddr + (_numTile * 16);
 
@@ -256,7 +256,7 @@ void GPU::RenderSprite(u8 _x, u8 _y, u8 _numTile, u8 _attr)
 //--------------------------------------------
 // --
 //--------------------------------------------
-void GPU::RenderTile(u16 _tileDataAddr, u8 _numTile, u8 _x, u8 _y)
+void PPU::RenderTile(u16 _tileDataAddr, u8 _numTile, u8 _x, u8 _y)
 {
     u16 tileAddr;
 
@@ -281,7 +281,7 @@ void GPU::RenderTile(u16 _tileDataAddr, u8 _numTile, u8 _x, u8 _y)
 //--------------------------------------------
 // --
 //--------------------------------------------
-void GPU::SetMode(int _newMode)
+void PPU::SetMode(int _newMode)
 {
     mMode = _newMode;
     mCycles = 0;

@@ -37,7 +37,6 @@ private:
     const MMU &mMmu;
 
     vector<MemInfo> mMemInfo;
-    int mAddrDigitCount {0};
     int mLineTotalCount {0};
 	int mMemSize{0};
 

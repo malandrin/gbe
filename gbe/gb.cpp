@@ -33,7 +33,7 @@ void GB::PowerUp(Cartridge *_cartridge)
 int GB::Step()
 {
     int numCycles = mCpu.Step();
-    mGpu.OnStep(numCycles);
+    mPpu.OnStep(numCycles);
 
     return numCycles;
 }

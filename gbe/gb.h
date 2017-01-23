@@ -4,7 +4,7 @@
 
 #include "mmu.h"
 #include "cpu.h"
-#include "gpu.h"
+#include "ppu.h"
 #include "joypad.h"
 #include "timer.h"
 
@@ -14,21 +14,21 @@ class GB
 {
 public:
 
-                GB              () : mCpu(mMmu, mTimer), mGpu(mCpu, mMmu), mJoypad(mMmu), mTimer(mMmu) {}
+                GB              () : mCpu(mMmu, mTimer), mPpu(mCpu, mMmu), mJoypad(mMmu), mTimer(mMmu) {}
 
     void        PowerUp         (Cartridge *_cartridge);
     int         Step            ();
 
     const MMU&  GetMmu          () const { return mMmu; }
     CPU&        GetCpu          () { return mCpu; }
-    GPU&        GetGpu          () { return mGpu; }
+    PPU&        GetPpu          () { return mPpu; }
     Joypad&     GetJoypad       () { return mJoypad; }
     Cartridge*  GetCartridge    () { return mCartridge; }
 
 private:
 	MMU     mMmu;
     CPU     mCpu;
-    GPU     mGpu;
+    PPU     mPpu;
     Joypad  mJoypad;
     Timer   mTimer;
     Cartridge *mCartridge { nullptr };

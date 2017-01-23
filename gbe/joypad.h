@@ -26,7 +26,7 @@ public:
 
             Joypad    (MMU &_mmu);
 
-    void    OnKeyDown (Key _key) { mKeyPressed[_key] = true; }
+    void    OnKeyDown (Key _key);
     void    OnKeyUp   (Key _key) { mKeyPressed[_key] = false; }
 
     // inherited IMmuListener

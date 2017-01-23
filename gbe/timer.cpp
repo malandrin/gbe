@@ -32,6 +32,7 @@ void Timer::Update(u8 _numCycles)
         {
             u16 value = mMmu.ReadU8(IOReg::TIMA);
             value += 1;
+            mTimaTimer -= mTimerFreq;
 
             if (value > 255)
             {

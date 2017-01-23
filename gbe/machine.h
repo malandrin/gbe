@@ -18,7 +18,7 @@ public:
 private:
 	GB& mGb;
 	CPU& mCpu;
-    GPU& mGpu;
+    PPU& mPpu;
     SDL_Window*   mWindow {nullptr};
     SDL_Renderer* mRenderer {nullptr};
     SDL_Texture*  mTexture {nullptr};

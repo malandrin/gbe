@@ -6,11 +6,11 @@
 class CPU;
 class MMU;
 
-class GPU : public IMmuListener
+class PPU : public IMmuListener
 {
 public:
 
-         GPU                (CPU &_cpu, MMU &_mmu);
+         PPU                (CPU &_cpu, MMU &_mmu);
 
     // MMU listener
     void OnMemoryWrittenU8  (u16 _virtAddr, u8 _value);

@@ -16,6 +16,9 @@ public:
     int         GetRomSize  () const { return mRomSize; }
     string      GetTitle    () const { return mTitle; }
 
+    u8          GetRomBank  () const { return mRomBank; }
+    u8          GetRamBank  () const { return mRamBank; }
+
     bool        WriteU8     (u16 _virtAddr, u8 _value);
 
 private:
