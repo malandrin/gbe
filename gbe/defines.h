@@ -88,6 +88,7 @@ namespace IOReg
     static const u16 SCY = 0xFF42;  // Scroll Y
     static const u16 SCX = 0xFF43;  // Scroll X
     static const u16 LY = 0xFF44;   // LCDC Y Coordinate
+    static const u16 LYC = 0xFF45;  // LY Compare
     static const u16 DMA = 0xFF46;  // DMA
     static const u16 BGP = 0xFF47;  // BG & Window Palette Data
     static const u16 OBP0 = 0xFF48; // Object Palette 0 Data

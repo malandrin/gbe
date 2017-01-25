@@ -50,8 +50,7 @@ private:
     u16  mBGTileData {0};
     u16  mWindowTileMap {0};
 
-    void RenderTile         (u16 _tileDataAddr, u8 _numTile, u8 _x, u8 _y);
-    void RenderSprite       (u8 _x, u8 _y, u8 _numTile, u8 _attr);
     void SetMode            (int _newMode);
-    void UpdateFrameBuffer  ();
+    void OnHLine            ();
+    void RenderScanline     ();
 };

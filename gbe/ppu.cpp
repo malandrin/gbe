@@ -55,30 +55,6 @@ void PPU::OnMemoryWrittenU8(u16 _virtAddr, u8 _value)
             mLCDOn = (_value & (1 << 7)) != 0;
             break;
 
-        case IOReg::STAT:
-            switch(_value & 0b00000011)
-            {
-                case 0:
-                    SetMode(HBLANK);
-                    break;
-
-                case 1:
-                    mMmu.WriteU8(IOReg::LY, Screen::Height + 1);
-                    mMmu.WriteU8(IOReg::IF, mMmu.ReadU8(IOReg::IF) | 1);
-                    SetMode(VBLANK);
-                    break;
-
-                case 2:
-                    SetMode(OAM);
-                    UpdateFrameBuffer();
-                    break;
-
-                case 3:
-                    SetMode(OAM_VRAM);
-                    break;
-            }
-            break;
-
         case IOReg::DMA:
             mMmu.CopyMem(_value * 0x100, Memory::OAMStartAddr, 40 * 4);
             break;
@@ -108,14 +84,20 @@ void PPU::OnStep(int _numCycles)
 
                 if (cl >= Screen::Height)
                 {
-                    SetMode(VBLANK);
-                    mMmu.WriteU8(IOReg::IF, mMmu.ReadU8(IOReg::IF) | 1);
-                    UpdateFrameBuffer();
+                    SetMode(VBLANK);                    
+                    
+                    // buffer to screen
+                    for (int y = 0; y < Screen::Height; ++y)
+                    {
+                        for (int x = 0; x < Screen::Width; ++x)
+                            mScreen[(y * Screen::Width) + x] = mColors[mBuffer[(y * 256) + x]];
+                    }
                 }
                 else
                     SetMode(OAM);
 
                 mMmu.WriteU8(IOReg::LY, cl);
+                OnHLine();
             }
             break;
 
@@ -128,7 +110,6 @@ void PPU::OnStep(int _numCycles)
                 if (cl > Screen::TotalHeight)
                 {
                     SetMode(OAM);
-                    UpdateFrameBuffer();
                     mMmu.WriteU8(IOReg::LY, 0);
                 }
                 else
@@ -136,6 +117,8 @@ void PPU::OnStep(int _numCycles)
                     mMmu.WriteU8(IOReg::LY, cl);
                     mCycles = 0;
                 }
+
+                OnHLine();
             }
             break;
 
@@ -146,7 +129,10 @@ void PPU::OnStep(int _numCycles)
 
         case OAM_VRAM:
             if (mCycles >= Cycles::PerVRAM)
+            {
                 SetMode(HBLANK);
+                RenderScanline();
+            }
             break;
     }
 }
@@ -154,101 +140,71 @@ void PPU::OnStep(int _numCycles)
 //--------------------------------------------
 // --
 //--------------------------------------------
-void PPU::UpdateFrameBuffer()
+void PPU::RenderScanline()
 {
-    if (mBGWindowDisplayOn)
+    int line = mMmu.ReadU8(IOReg::LY);
+    int mapX = mMmu.ReadU8(IOReg::SCX);
+    int mapY = (line + mMmu.ReadU8(IOReg::SCY) % 256);
+    bool signedTiles = (mBGTileData == Memory::VRamTileData2StartAddr);
+
+    // todo: comprobar si el bg y sprites y demas estan a ON para pintarlos
+
+    // draw tile map
+    for (int x = 0; x < Screen::Width; ++x)
     {
-        int r = 0;
-        int c = 0;
+        int rx = (mapX + x) % 256;
+        int tileIdx = ((mapY / 8) * 32) + (rx / 8);
+        u8 tileNum = mMmu.ReadU8(mBGTileMap + tileIdx);
+        u16 tileAddr = signedTiles ? ((0x9000 + (i8)tileNum * 16)) : (mBGTileMap + tileNum * 16);
+        int tx = rx % 8;
+        int ty = mapY % 8;
 
-        // tile map
-        for (int t = 0; t < 1024; ++t)
-        {
-            RenderTile(mBGTileData, mMmu.ReadU8(mBGTileMap + t), c * 8, r * 8);
+        tileAddr += (ty * 2);
 
-            ++c;
-            if (c == 32)
-            {
-                c = 0;
-                ++r;
-            }
-        }
-
-        // sprites
-        u16 addr = Memory::OAMStartAddr;
-
-        for (int s = 0; s < 40; ++s)
-        {            
-            u8 sprPosY = mMmu.ReadU8(addr++);
-            u8 sprPosX = mMmu.ReadU8(addr++);
-            u8 sprTile = mMmu.ReadU8(addr++);
-            u8 sprAttr = mMmu.ReadU8(addr++);
-
-            RenderSprite(sprPosX, sprPosY, sprTile, sprAttr);
-        }
-
-        // ...
-        int sx = mMmu.ReadU8(IOReg::SCX);
-        int sy = mMmu.ReadU8(IOReg::SCY);
-
-        for (int y = 0; y < Screen::Height; ++y)
-        {
-            for (int x = 0; x < Screen::Width; ++x)
-            {
-                int bx = (sx + x) % 256;
-                int by = (sy + y) % 256;
-
-                if (mBuffer[(by * 256) + bx] != 0)
-                    int a = 0;
-
-                mScreen[(y * Screen::Width) + x] = mColors[mBuffer[(by * 256) + bx]];
-            }
-        }
+        u8 b1 = mMmu.ReadU8(tileAddr);
+        u8 b2 = mMmu.ReadU8(tileAddr + 1);
+        u8 cp = ((b1 >> (7 - tx) & 1) << 1) | ((b2 >> (7 - tx) & 1));
+        mBuffer[(line * 256) + x] = mPalette[cp];
     }
-}
 
-//--------------------------------------------
-// --
-//--------------------------------------------
-void PPU::RenderSprite(u8 _x, u8 _y, u8 _numTile, u8 _attr)
-{
-    u16 tileAddr = Memory::VRamTileData1StartAddr + (_numTile * 16);
+    // sprites
+    // todo: pintar un maximo de 10 sprites por linea
+    u16 addr = Memory::OAMStartAddr;
 
-    if ((_y == 0) || (_y == Screen::Height + 16) || (_x == 0) || (_x == Screen::Width + 8))
-        return;
-
-    // pivot point is in the right bottom corner
-    _x -= 8;
-    _y -= 16;
-
-    u8 ir = 0;
-    u8 fr = 8;
-
-    if (_y < 8)
-        ir = 8 - _y;
-    else if (_y >= Screen::Height)
-        fr = Screen::Height - _y;
-
-    u8 ic = 0;
-    u8 fc = 8;
-
-    if (_x < 8)
-        ic = 8 - _x;
-    else if (_x >= Screen::Width)
-        fc = Screen::Width - _x;
-
-    // ...
-    for (int r = ir; r < fr; ++r)
+    for (int s = 0; s < 40; ++s)
     {
+        u8 sprPosY = mMmu.ReadU8(addr++) - 16;
+        u8 sprPosX = mMmu.ReadU8(addr++) - 8;
+
+        if ((sprPosY > line) || ((sprPosY + 8) <= line) || (sprPosX <= 0) || (sprPosX >= Screen::Width))
+        {
+            addr += 2;
+            continue;
+        }
+
+        u8 sprTile = mMmu.ReadU8(addr++);
+        u8 sprAttr = mMmu.ReadU8(addr++);
+        u16 tileAddr = Memory::VRamTileData1StartAddr + (sprTile * 16);
+        int sprLine = line - sprPosY;
+        tileAddr += sprLine * 2;
+
         u8 b1 = mMmu.ReadU8(tileAddr++);
         u8 b2 = mMmu.ReadU8(tileAddr++);
 
-        for (int b = fc - 1; b >= ic; --b)
+        for (int x = 0; x < 8; ++x)
         {
-            bool palette1 = (_attr & (1 << 4)) == 1;
-            u8 cp = (((b1 >> b) & 1) << 1) | ((b2 >> b) & 1);
+            if (sprPosX + x >= Screen::Width)
+                break;
 
-            mBuffer[((_y + r) * 256) + _x + (7 - b)] = palette1 ? mSprPalette1[cp] : mSprPalette0[cp];
+            // todo: gestionar atributos
+
+            bool palette1 = (sprAttr & (1 << 4)) == 1;
+            u8 cp = (((b1 >> (7 - x)) & 1) << 1) | ((b2 >> (7 - x)) & 1);
+
+            if (cp == 0)
+                continue;
+
+            mBuffer[(line * 256) + sprPosX + x] = palette1 ? mSprPalette1[cp] : mSprPalette0[cp];
         }
     }
 }
@@ -256,26 +212,21 @@ void PPU::RenderSprite(u8 _x, u8 _y, u8 _numTile, u8 _attr)
 //--------------------------------------------
 // --
 //--------------------------------------------
-void PPU::RenderTile(u16 _tileDataAddr, u8 _numTile, u8 _x, u8 _y)
+void PPU::OnHLine()
 {
-    u16 tileAddr;
+    u8 line = mMmu.ReadU8(IOReg::LY);
+    u8 stat = mMmu.ReadU8(IOReg::STAT);
+    bool cline = line == mMmu.ReadU8(IOReg::LYC);
 
-    if (_tileDataAddr == Memory::VRamTileData2StartAddr)
-        tileAddr = 0x9000 + ((i8)_numTile * 16);
+    if (cline)
+        stat |= (1 << 2);
     else
-        tileAddr = _tileDataAddr + (_numTile * 16);
+        stat &= ~(1 << 2);
 
-    for (int r = 0; r < 8; ++r)
-    {
-        u8 b1 = mMmu.ReadU8(tileAddr++);
-        u8 b2 = mMmu.ReadU8(tileAddr++);
+    mMmu.WriteU8(IOReg::STAT, stat, false);
 
-        for (int b = 7; b >= 0; --b)
-        {
-            u8 cp = (((b1 >> b) & 1) << 1) | ((b2 >> b) & 1);
-            mBuffer[((_y + r) * 256) + _x + (7 - b)] = mPalette[cp];
-        }
-    }
+    if (cline && (stat & (1 << 6)) != 0)
+        mMmu.WriteU8(IOReg::IF, mMmu.ReadU8(IOReg::IF) | (1 << 1));
 }
 
 //--------------------------------------------
@@ -285,4 +236,28 @@ void PPU::SetMode(int _newMode)
 {
     mMode = _newMode;
     mCycles = 0;
+
+    u8 stat = (mMmu.ReadU8(IOReg::STAT) & 0b11111100) | mMode;
+    mMmu.WriteU8(IOReg::STAT, stat, false);
+    
+    // ...
+    switch(mMode)
+    {
+        case HBLANK:
+            if ((stat & (1 << 3)) != 0)
+                mMmu.WriteU8(IOReg::IF, mMmu.ReadU8(IOReg::IF) | (1 << 1));
+            break;
+
+        case VBLANK:
+            mMmu.WriteU8(IOReg::IF, mMmu.ReadU8(IOReg::IF) | 1);
+
+            if ((stat & (1 << 4)) != 0)
+                mMmu.WriteU8(IOReg::IF, mMmu.ReadU8(IOReg::IF) | (1 << 1));
+            break;
+
+        case OAM_VRAM:
+            if ((stat & (1 << 5)) != 0)
+                mMmu.WriteU8(IOReg::IF, mMmu.ReadU8(IOReg::IF) | (1 << 1));
+            break;
+    }
 }
