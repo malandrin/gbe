@@ -47,6 +47,7 @@ bool Cartridge::WriteU8(u16 _virtAddr, u8 _value)
     switch(mType)
     {
         case MBC1:
+        case MBC3:
             if (_virtAddr >= Memory::RomRamModeSelectStartAddr && _virtAddr <= Memory::RomRamModeSelectEndAddr)
             {
                 mRomBankingMode = _value == 0;
@@ -85,6 +86,7 @@ u8 *Cartridge::GetBankRom(u16 _addr) const
     switch(mType)
     {
         case MBC1:
+        case MBC3:
             return &mRom[Memory::RomStartAddr + (mRomBank * 0x4000) + (_addr - Memory::RomBankNStartAddr)];
             break;
 

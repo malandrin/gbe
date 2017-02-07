@@ -25,7 +25,8 @@ private:
 
     enum MBC
     {
-        MBC1 = 1
+        MBC1 = 1,
+        MBC3 = 3 // todo: implementar correctamente todos los casos
     };
 
     u8     *mRom { nullptr };

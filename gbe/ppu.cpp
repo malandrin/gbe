@@ -47,11 +47,11 @@ void PPU::OnMemoryWrittenU8(u16 _virtAddr, u8 _value)
         case IOReg::LCDC:
             mBGWindowDisplayOn = (_value & 1) != 0;
             mObjDisplayOn = (_value & (1 << 1)) != 0;
-            mObjSize = (_value & (1 << 2)) != 0 ? 1 : 0;
+            mObjSize = (_value & (1 << 2)) != 0 ? 16 : 8;
             mBGTileMap = (_value & (1 << 3)) != 0 ? Memory::VRamTileMap2StartAddr : Memory::VRamTileMap1StartAddr;
             mBGTileData = (_value & (1 << 4)) != 0 ? Memory::VRamTileData1StartAddr : Memory::VRamTileData2StartAddr;
             mWindowDisplayOn = (_value & (1 << 5)) != 0;
-            mWindowTileMap = (_value & (1 << 6)) != 0 ? Memory::VRamTileMap1StartAddr : Memory::VRamTileMap2StartAddr;
+            mWindowTileMap = (_value & (1 << 6)) != 0 ? Memory::VRamTileMap2StartAddr : Memory::VRamTileMap1StartAddr;
             mLCDOn = (_value & (1 << 7)) != 0;
             break;
 
@@ -142,69 +142,100 @@ void PPU::OnStep(int _numCycles)
 //--------------------------------------------
 void PPU::RenderScanline()
 {
+    if (!mLCDOn)
+        return;
+
     int line = mMmu.ReadU8(IOReg::LY);
     int mapX = mMmu.ReadU8(IOReg::SCX);
     int mapY = (line + mMmu.ReadU8(IOReg::SCY) % 256);
+    int wndX = mMmu.ReadU8(IOReg::WX) - 7;
+    int wndY = mMmu.ReadU8(IOReg::WY);
     bool signedTiles = (mBGTileData == Memory::VRamTileData2StartAddr);
 
-    // todo: comprobar si el bg y sprites y demas estan a ON para pintarlos
-
-    // draw tile map
-    for (int x = 0; x < Screen::Width; ++x)
+    // draw tile map & window
+    if (mBGWindowDisplayOn)
     {
-        int rx = (mapX + x) % 256;
-        int tileIdx = ((mapY / 8) * 32) + (rx / 8);
-        u8 tileNum = mMmu.ReadU8(mBGTileMap + tileIdx);
-        u16 tileAddr = signedTiles ? ((0x9000 + (i8)tileNum * 16)) : (mBGTileMap + tileNum * 16);
-        int tx = rx % 8;
-        int ty = mapY % 8;
+        for (int x = 0; x < Screen::Width; ++x)
+        {
+            if (mWindowDisplayOn && (line >= wndY) && (x >= wndX))
+            {
+                int rx = x - wndX;
+                int tileIdx = (((line - wndY) / 8) * 32) + (rx / 8);
+                u8 tileNum = mMmu.ReadU8(mWindowTileMap + tileIdx);
+                u16 tileAddr = signedTiles ? ((0x9000 + (i8)tileNum * 16)) : (mWindowTileMap + tileNum * 16);
+                int tx = rx % 8;
+                int ty = (line - wndY) % 8;
 
-        tileAddr += (ty * 2);
+                tileAddr += (ty * 2);
 
-        u8 b1 = mMmu.ReadU8(tileAddr);
-        u8 b2 = mMmu.ReadU8(tileAddr + 1);
-        u8 cp = ((b1 >> (7 - tx) & 1) << 1) | ((b2 >> (7 - tx) & 1));
-        mBuffer[(line * 256) + x] = mPalette[cp];
+                u8 b1 = mMmu.ReadU8(tileAddr);
+                u8 b2 = mMmu.ReadU8(tileAddr + 1);
+                u8 cp = ((b1 >> (7 - tx) & 1) << 1) | ((b2 >> (7 - tx) & 1));
+                mBuffer[(line * 256) + x] = mPalette[cp];
+            }
+            else
+            {
+                int rx = (mapX + x) % 256;
+                int tileIdx = ((mapY / 8) * 32) + (rx / 8);
+                u8 tileNum = mMmu.ReadU8(mBGTileMap + tileIdx);
+                u16 tileAddr = signedTiles ? ((0x9000 + (i8)tileNum * 16)) : (mBGTileMap + tileNum * 16);
+                int tx = rx % 8;
+                int ty = mapY % 8;
+
+                tileAddr += (ty * 2);
+
+                u8 b1 = mMmu.ReadU8(tileAddr);
+                u8 b2 = mMmu.ReadU8(tileAddr + 1);
+                u8 cp = ((b1 >> (7 - tx) & 1) << 1) | ((b2 >> (7 - tx) & 1));
+                mBuffer[(line * 256) + x] = mPalette[cp];
+            }
+        }
     }
 
     // sprites
-    // todo: pintar un maximo de 10 sprites por linea
-    u16 addr = Memory::OAMStartAddr;
-
-    for (int s = 0; s < 40; ++s)
+    if (mObjDisplayOn)
     {
-        u8 sprPosY = mMmu.ReadU8(addr++) - 16;
-        u8 sprPosX = mMmu.ReadU8(addr++) - 8;
+        u16 addr = Memory::OAMStartAddr;
 
-        if ((sprPosY > line) || ((sprPosY + 8) <= line) || (sprPosX <= 0) || (sprPosX >= Screen::Width))
+        for (int s = 0; s < 40; ++s)
         {
-            addr += 2;
-            continue;
-        }
+            u8 sprPosY = mMmu.ReadU8(addr++) - 16;
+            u8 sprPosX = mMmu.ReadU8(addr++) - 8;
 
-        u8 sprTile = mMmu.ReadU8(addr++);
-        u8 sprAttr = mMmu.ReadU8(addr++);
-        u16 tileAddr = Memory::VRamTileData1StartAddr + (sprTile * 16);
-        int sprLine = line - sprPosY;
-        tileAddr += sprLine * 2;
-
-        u8 b1 = mMmu.ReadU8(tileAddr++);
-        u8 b2 = mMmu.ReadU8(tileAddr++);
-
-        for (int x = 0; x < 8; ++x)
-        {
-            if (sprPosX + x >= Screen::Width)
-                break;
-
-            // todo: gestionar atributos
-
-            bool palette1 = (sprAttr & (1 << 4)) == 1;
-            u8 cp = (((b1 >> (7 - x)) & 1) << 1) | ((b2 >> (7 - x)) & 1);
-
-            if (cp == 0)
+            if ((sprPosY > line) || ((sprPosY + mObjSize) <= line) || (sprPosX <= 0) || (sprPosX >= Screen::Width))
+            {
+                addr += 2;
                 continue;
+            }
 
-            mBuffer[(line * 256) + sprPosX + x] = palette1 ? mSprPalette1[cp] : mSprPalette0[cp];
+            u8 sprTile = mMmu.ReadU8(addr++);
+            u8 sprAttr = mMmu.ReadU8(addr++);
+            u16 tileAddr = Memory::VRamTileData1StartAddr + (sprTile * 16);
+            bool flipY = (sprAttr & (1 << 6)) != 0;
+            int sprLine = flipY ? (mObjSize - 1 - (line - sprPosY)) : (line - sprPosY); // todo: comprobar que funciona el flipY
+            tileAddr += sprLine * 2;
+
+            u8 b1 = mMmu.ReadU8(tileAddr++);
+            u8 b2 = mMmu.ReadU8(tileAddr++);
+
+            bool priority = !((sprAttr & (1 << 7)) != 0);
+            bool flipX = (sprAttr & (1 << 5)) != 0;
+            bool palette1 = (sprAttr & (1 << 4)) != 0;
+
+            for (int x = 0; x < 8; ++x)
+            {
+                if (sprPosX + x >= Screen::Width)
+                    break;
+
+                int rx = flipX ? (7 - x) : x;
+                u8 cp = (((b1 >> (7 - rx)) & 1) << 1) | ((b2 >> (7 - rx)) & 1);
+                int coord = (line * 256) + sprPosX + x;
+
+                if ((cp == 0) || (!priority && mBuffer[coord] != 0))
+                    continue;
+
+                mBuffer[coord] = palette1 ? mSprPalette1[cp] : mSprPalette0[cp];
+            }
         }
     }
 }

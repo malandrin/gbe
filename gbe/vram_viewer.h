@@ -22,5 +22,5 @@ private:
     void    BuildTileData   (u16 _addr);
     void    BuildTileMap    (u16 _addrMap, u16 _addrTiles);
     void    BuildOAMData    ();
-    void    RenderTile      (u16 _tileDataAddr, u8 _numTile, u8 _x, u8 _y);
+    void    RenderTile      (u16 _tileDataAddr, u8 _numTile, u8 _x, u8 _y, u8 _h = 8, bool _flipX = false, bool _flipY = false);
 };

@@ -93,6 +93,8 @@ namespace IOReg
     static const u16 BGP = 0xFF47;  // BG & Window Palette Data
     static const u16 OBP0 = 0xFF48; // Object Palette 0 Data
     static const u16 OBP1 = 0xFF49; // Object Palette 1 Data
+    static const u16 WX = 0xFF4B;   // Window X Position
+    static const u16 WY = 0xFF4A;   // Window Y Position 
     static const u16 IE = 0xFFFF;   // Interrupt Enable
 }
 
