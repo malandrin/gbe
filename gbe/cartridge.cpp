@@ -9,9 +9,6 @@
 //--------------------------------------------
 Cartridge::Cartridge(const string &_filename)
 {
-    fill_n(mExternalRam, Size::ExternalRam, 0);
-
-    // ...
     ifstream cartridge(_filename, ios::binary);
 
     cartridge.seekg(0, cartridge.end);
@@ -25,6 +22,36 @@ Cartridge::Cartridge(const string &_filename)
     // ...
     mType = mRom[0x147];
 
+    switch(mType)
+    {
+        case MBC1:
+        case MBC3:
+        {
+            mRamSize = 32 * 1024;
+            mRam = new u8[32 * 1024] { 0 };
+
+            // sav filename
+            mSavFilename = _filename;
+
+            int dpos = mSavFilename.find_last_of('.');
+
+            if (dpos != -1)
+                mSavFilename = mSavFilename.substr(0, dpos);
+
+            mSavFilename += ".sav";
+
+            // ...
+            if (FileExists(mSavFilename))
+            {
+                ifstream fileram(mSavFilename, ios::binary);
+                fileram.read((char*)mRam, mRamSize);
+                fileram.close();
+            }
+        }
+        break;
+    }
+
+    // ...
     char title[17] { 0 };
     memcpy_s(title, 16, &mRom[0x134], 16);
     mTitle = title;
@@ -37,6 +64,15 @@ Cartridge::~Cartridge()
 {
     if (mRom != nullptr)
         delete[] mRom;
+
+    if (mRam != nullptr)
+    {
+        ofstream output(mSavFilename, ofstream::binary);
+        output.write((char*)mRam, mRamSize);
+        output.close();
+
+        delete[] mRam;
+    }
 }
 
 //--------------------------------------------
@@ -46,6 +82,9 @@ bool Cartridge::WriteU8(u16 _virtAddr, u8 _value)
 {
     switch(mType)
     {
+        case MBC0:
+            break;
+
         case MBC1:
         case MBC3:
             if (_virtAddr >= Memory::RomRamModeSelectStartAddr && _virtAddr <= Memory::RomRamModeSelectEndAddr)
@@ -71,7 +110,7 @@ bool Cartridge::WriteU8(u16 _virtAddr, u8 _value)
             break;
 
         default:
-            cout << "opcode MBC: " << mType << endl;
+            cout << "unknown MBC: " << mType << endl;
             break;
     }
 
@@ -85,6 +124,10 @@ u8 *Cartridge::GetBankRom(u16 _addr) const
 {
     switch(mType)
     {
+        case MBC0:
+            return GetRom(_addr);
+            break;
+
         case MBC1:
         case MBC3:
             return &mRom[Memory::RomStartAddr + (mRomBank * 0x4000) + (_addr - Memory::RomBankNStartAddr)];
@@ -96,4 +139,12 @@ u8 *Cartridge::GetBankRom(u16 _addr) const
     }
 
     return nullptr;
+}
+
+//--------------------------------------------
+// --
+//--------------------------------------------
+u8 *Cartridge::GetRam(u16 _addr)
+{
+    return &mRam[(mRamBank * 0x1FFF) + (_addr - Memory::ExternalRamStartAddr)];
 }

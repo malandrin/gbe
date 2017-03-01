@@ -35,11 +35,14 @@ bool InstructionsViewer::OnStep()
 {
     u16 pc = mGb.GetCpu().GetRegPC();
 
+    if (mShowingBootRom && !mGb.GetMmu().IsInBootRom())
+        CreateMemBlockInfo();
+
     if (pc >= Memory::HighRamStartAddr && pc <= Memory::HighRamEndAddr)
     {
         if (!mHighRamWalked)
         {
-            CreateBlockInfo(&mMemBlocksInfo[mNumBlocksInfo - 1], Memory::HighRamStartAddr, MMU::HighRamSize, "HRAM:", mGb.GetMmu().GetHighRam(), Memory::HighRamStartAddr);
+            CreateBlockInfo(&mMemBlocksInfo[mNumBlocksInfo - 1], Memory::HighRamStartAddr, Size::HighRam, "HRAM:", mGb.GetMmu().GetHighRam(), Memory::HighRamStartAddr);
             mHighRamWalked = true;
         }
     }
@@ -72,7 +75,8 @@ bool InstructionsViewer::OnStep()
         base = (int)mMemBlocksInfo[0].lines.size() + (int)mMemBlocksInfo[romBank].lines.size();
     }
 
-    assert(block != nullptr);
+    if (block == nullptr)
+        return false;
 
     int lineInfo = block->addr2Line[addr - block->addr];
     mActiveLineIdx = base + (lineInfo >> 1);
@@ -239,7 +243,7 @@ InstructionsViewer::MemBlockInfo *InstructionsViewer::GetMemBlockInfoByLine(int 
     if (_line >= accum && _line < (int)(accum + mMemBlocksInfo[romBank].lines.size()))
     {
         _blockInitialLine = accum;
-        return &mMemBlocksInfo[1];
+        return &mMemBlocksInfo[romBank];
     }
 
     // highram
@@ -268,21 +272,35 @@ void InstructionsViewer::CreateMemBlockInfo()
     if (mMemBlocksInfo != nullptr)
         delete[] mMemBlocksInfo;
 
-    int romSize = mGb.GetMmu().GetRomSize();
-    int kb16 = 1024 * 16;
-    mNumBlocksInfo = (romSize / kb16) + 1; // 1 = highram
+    int romSize = mGb.GetMmu().GetActiveRomSize();
 
-    mMemBlocksInfo = new MemBlockInfo[mNumBlocksInfo];
+    if (mGb.GetMmu().IsInBootRom())
+    {
+        mNumBlocksInfo = 2;
+        mMemBlocksInfo = new MemBlockInfo[mNumBlocksInfo];
 
-    // bank 0
-    CreateBlockInfo(&mMemBlocksInfo[0], 0, kb16, "ROM0:", mGb.GetMmu().GetRom(), 0);
+        CreateBlockInfo(&mMemBlocksInfo[0], 0, romSize, " BOOT:", mGb.GetMmu().GetBootRom(), 0);
 
-    // banks 1-n
-    for (int i = 1; i < mNumBlocksInfo - 1; ++i)
-        CreateBlockInfo(&mMemBlocksInfo[i], kb16, kb16, "ROM" + to_string(i) + ":", mGb.GetMmu().GetRom() + (kb16 * i), kb16 * i);
+        mShowingBootRom = true;
+    }
+    else
+    {
+        int kb16 = 1024 * 16;
+        mNumBlocksInfo = (romSize / kb16) + 1; // 1 = highram
+        mMemBlocksInfo = new MemBlockInfo[mNumBlocksInfo];
 
-    // highram
-    CreateBlockInfo(&mMemBlocksInfo[mNumBlocksInfo - 1], Memory::HighRamStartAddr, MMU::HighRamSize, "HRAM:", mGb.GetMmu().GetHighRam(), Memory::HighRamStartAddr);
+        // bank 0
+        CreateBlockInfo(&mMemBlocksInfo[0], 0, kb16, "ROM00:", mGb.GetMmu().GetRom(), 0);
+
+        // banks 1-n
+        for (int i = 1; i < mNumBlocksInfo - 1; ++i)
+            CreateBlockInfo(&mMemBlocksInfo[i], kb16, kb16, "ROM" + Int2Hex(i, 2, false) + ":", mGb.GetMmu().GetRom() + (kb16 * i), kb16 * i);
+
+        // highram
+        CreateBlockInfo(&mMemBlocksInfo[mNumBlocksInfo - 1], Memory::HighRamStartAddr, Size::HighRam, " HRAM:", mGb.GetMmu().GetHighRam(), Memory::HighRamStartAddr);
+
+        mShowingBootRom = false;
+    }
 
     // ...
     u8 romBank = mGb.GetMmu().GetRomBank();

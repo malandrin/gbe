@@ -10,12 +10,11 @@ class InstructionsViewer
 {
 public:
 
-     InstructionsViewer(GB &_gb, Debugger &_debugger);
-    ~InstructionsViewer();
+            InstructionsViewer (GB &_gb, Debugger &_debugger);
+           ~InstructionsViewer ();
 
-	void Render();
-
-    bool OnStep();
+	void    Render             ();
+    bool    OnStep             ();
 
 private:
 
@@ -47,6 +46,7 @@ private:
     int                     mNumBlocksInfo { 0 };
     u8                      mPrevRomBank { 0 };
     Debugger               &mDebugger;
+    bool                    mShowingBootRom { false };
 
     void            ToggleBreakpoint           (MemBlockInfo *_info, u16 _addr);
     void            CreateMemBlockInfo         ();

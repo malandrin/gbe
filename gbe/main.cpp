@@ -14,9 +14,16 @@ int main(int argn, char *argv[])
 	if (argn < 2)
 	{
 		cout << "Invalid number of arguments!" << endl;
-		cout << "Syntax: gbe.exe rom [-debugger] [-boot_rom:file]";
+		cout << "Syntax: gbe.exe rom [-debugger] [-disable_boot_rom]";
 		return -1;
 	}
+
+    // check file existence
+    if (!FileExists(argv[1]))
+    {
+        cout << "File " << argv[1] << " does not exist";
+        return -1;
+    }
 
 	// ...
 	if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
@@ -32,8 +39,8 @@ int main(int argn, char *argv[])
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 
     // ...
-    string bootRom = "";
-    bool   debuggerActive = false;
+    bool runBootRom = true;
+    bool debuggerActive = false;
 
     for (int i = 2; i < argn; ++i)
     {
@@ -42,15 +49,15 @@ int main(int argn, char *argv[])
         // todo: add error checking
         if (sa == "-debugger")
             debuggerActive = true;
-        else if (sa.find("-boot_rom") != -1)
-            bootRom = sa.substr(sa.find("-boot_rom") + 10);
+        else if (sa == "-disable_boot_rom")
+            runBootRom = false;
     }
 
 	// ...
 	GB gb;
     Cartridge cartridge(argv[1]);
 
-	gb.PowerUp(&cartridge);
+	gb.PowerUp(&cartridge, runBootRom);
 
 	unique_ptr<Debugger> debugger {nullptr};
 
@@ -101,7 +108,7 @@ int main(int argn, char *argv[])
 		if (debugger != nullptr)
 			debugger->Render();
 
-        if (emuTime < msPerFrame)
+        if (machine.GetPpu().IsLCDOn() && emuTime < msPerFrame)
             SDL_Delay(msPerFrame - emuTime);
 	}
 

@@ -6,24 +6,15 @@
 //--------------------------------------------
 // --
 //--------------------------------------------
-void GB::PowerUp(Cartridge *_cartridge)
-{
-    
-    try
-    {
-        //mMmu.LoadRoms(_cartridge, _bootRom);
-        mCartridge = _cartridge;
-        mMmu.OnCartridgeInserted(_cartridge);
+void GB::PowerUp(Cartridge *_cartridge, bool _runBootRom)
+{    
+    mCartridge = _cartridge;
+    mMmu.OnCartridgeInserted(_cartridge);
 
-        //if (_bootRom == "")
-        {
-            mCpu.SetStateAfterBoot();
-            mMmu.SetStateAfterBoot();
-        }
-    }
-    catch(runtime_error &e)
+    if (!_runBootRom)
     {
-        cout << e.what() << '\n';
+        mCpu.SetStateAfterBoot();
+        mMmu.SetStateAfterBoot();
     }
 }
 

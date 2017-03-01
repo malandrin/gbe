@@ -7,7 +7,7 @@
 #include "vram_viewer.h"
 
 static string sRadioButtonsText[5] { "TData 1", "TData 2", "TMap 1", "TMap 2", "OAM" };
-static u32 sPalette[4] = { 0xFF000000, 0xFF404040, 0xFF7F7F7F, 0xFFFFFFFF};
+static u32 sPalette[4] = { 0xFF000000, 0xFF7F7F7F, 0xFF404040, 0xFFFFFFFF };
 
 //--------------------------------------------
 // --
@@ -61,13 +61,41 @@ void VRAMViewer::Render()
                 BuildTileMap(mActiveVRam == 2 ? Memory::VRamTileMap1StartAddr : Memory::VRamTileMap2StartAddr, tileData);
                 ImGui::Image((ImTextureID)mTextureId, ImVec2(256, 256), ImVec2(0, 0), ImVec2(1, 1), ImVec4(1, 1, 1, 1), ImVec4(0.2265f, 0.2265f, 0.4492f, 1.0f));
 
-                float x = screenPos.x + 1 + mMmu.ReadU8(IOReg::SCX);
-                float y = screenPos.y + 1 + mMmu.ReadU8(IOReg::SCY);
+                // ...                
+                float sx = screenPos.x + 1;
+                float sy = screenPos.y + 1;
+                float x = (float)((256 + mMmu.ReadU8(IOReg::SCX)) % 256);
+                float y = (float)((256 + mMmu.ReadU8(IOReg::SCY)) % 256);
+                float x2 = (float)(((int)x + Screen::Width) % 256);
+                float y2 = (float)(((int)y + Screen::Height) % 256);
 
-                ImGui::GetWindowDrawList()->AddLine(ImVec2(x, y), ImVec2(x + Screen::Width, y), ImColor(ImGui::GetStyle().Colors[ImGuiCol_Border]));
-                ImGui::GetWindowDrawList()->AddLine(ImVec2(x, y + Screen::Height), ImVec2(x + Screen::Width, y + Screen::Height), ImColor(ImGui::GetStyle().Colors[ImGuiCol_Border]));
-                ImGui::GetWindowDrawList()->AddLine(ImVec2(x, y), ImVec2(x, y + Screen::Height), ImColor(ImGui::GetStyle().Colors[ImGuiCol_Border]));
-                ImGui::GetWindowDrawList()->AddLine(ImVec2(x + Screen::Width, y), ImVec2(x + Screen::Width, y + Screen::Height), ImColor(ImGui::GetStyle().Colors[ImGuiCol_Border]));
+                if (x2 < x)
+                {
+                    ImGui::GetWindowDrawList()->AddLine(ImVec2(sx, sy + y), ImVec2(sx + x2, sy + y), ImColor(ImGui::GetStyle().Colors[ImGuiCol_ButtonActive]));
+                    ImGui::GetWindowDrawList()->AddLine(ImVec2(sx + x, sy + y), ImVec2(sx + 256, sy + y), ImColor(ImGui::GetStyle().Colors[ImGuiCol_ButtonActive]));
+
+                    ImGui::GetWindowDrawList()->AddLine(ImVec2(sx, sy + y2), ImVec2(sx + x2, sy + y2), ImColor(ImGui::GetStyle().Colors[ImGuiCol_ButtonActive]));
+                    ImGui::GetWindowDrawList()->AddLine(ImVec2(sx + x, sy + y2), ImVec2(sx + 256, sy + y2), ImColor(ImGui::GetStyle().Colors[ImGuiCol_ButtonActive]));
+                }
+                else
+                {
+                    ImGui::GetWindowDrawList()->AddLine(ImVec2(sx + x, sy + y), ImVec2(sx + x + Screen::Width, sy + y), ImColor(ImGui::GetStyle().Colors[ImGuiCol_ButtonActive]));
+                    ImGui::GetWindowDrawList()->AddLine(ImVec2(sx + x, sy + y2), ImVec2(sx + x + Screen::Width, sy + y2), ImColor(ImGui::GetStyle().Colors[ImGuiCol_ButtonActive]));
+                }
+
+                if (y2 < y)
+                {
+                    ImGui::GetWindowDrawList()->AddLine(ImVec2(sx + x, sy), ImVec2(sx + x, sy + y2), ImColor(ImGui::GetStyle().Colors[ImGuiCol_ButtonActive]));
+                    ImGui::GetWindowDrawList()->AddLine(ImVec2(sx + x, sy + y), ImVec2(sx + x, sy + 256), ImColor(ImGui::GetStyle().Colors[ImGuiCol_ButtonActive]));
+
+                    ImGui::GetWindowDrawList()->AddLine(ImVec2(sx + x2, sy), ImVec2(sx + x2, sy + y2), ImColor(ImGui::GetStyle().Colors[ImGuiCol_ButtonActive]));
+                    ImGui::GetWindowDrawList()->AddLine(ImVec2(sx + x2, sy + y), ImVec2(sx + x2, sy + 256), ImColor(ImGui::GetStyle().Colors[ImGuiCol_ButtonActive]));
+                }
+                else
+                {
+                    ImGui::GetWindowDrawList()->AddLine(ImVec2(sx + x, sy + y), ImVec2(sx + x, sy + y + Screen::Height), ImColor(ImGui::GetStyle().Colors[ImGuiCol_ButtonActive]));
+                    ImGui::GetWindowDrawList()->AddLine(ImVec2(sx + x2, sy + y), ImVec2(sx + x2, sy + y + Screen::Height), ImColor(ImGui::GetStyle().Colors[ImGuiCol_ButtonActive]));
+                }
             }
             break;
 
@@ -178,7 +206,7 @@ void VRAMViewer::RenderTile(u16 _tileDataAddr, u8 _numTile, u8 _x, u8 _y, u8 _h,
 
     for (int r = 0; r < _h; ++r)
     {
-        u16 rta = tileAddr + ((_flipY ? (7 - r) : r) * 2);
+        u16 rta = tileAddr + ((_flipY ? (_h - r) : r) * 2);
         u8 b1 = mMmu.ReadU8(rta);
         u8 b2 = mMmu.ReadU8(rta + 1);
 

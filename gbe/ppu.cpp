@@ -10,7 +10,7 @@ static u32 mColors[4] {0x9BBC0F, 0x8BAC0F, 0x306230, 0x0F380F};
 //--------------------------------------------
 // --
 //--------------------------------------------
-PPU::PPU(CPU &_cpu, MMU &_mmu) : mMmu(_mmu)
+PPU::PPU(CPU &_cpu, MMU &_mmu) : mCpu(_cpu), mMmu(_mmu)
 {
     _mmu.AddListener(this);
 }
@@ -25,23 +25,22 @@ void PPU::OnMemoryWrittenU8(u16 _virtAddr, u8 _value)
     {
         case IOReg::BGP:
             mPalette[0] = (_value & 0b11);
-            mPalette[1] = (_value >> 2) & 0b11;
-            mPalette[2] = (_value >> 4) & 0b11;
+            mPalette[2] = (_value >> 2) & 0b11;
+            mPalette[1] = (_value >> 4) & 0b11;
             mPalette[3] = (_value >> 6) & 0b11;
             break;
 
         case IOReg::OBP0:
             mSprPalette0[0] = 0;
-            mSprPalette0[1] = (_value >> 2) & 0b11;
-            mSprPalette0[2] = (_value >> 4) & 0b11;
+            mSprPalette0[2] = (_value >> 2) & 0b11;
+            mSprPalette0[1] = (_value >> 4) & 0b11;
             mSprPalette0[3] = (_value >> 6) & 0b11;
             break;
 
         case IOReg::OBP1:
             mSprPalette1[0] = 0;
-            mSprPalette1[1] = (_value >> 2) & 0b11;
-            mSprPalette1[2] = (_value >> 4) & 0b11;
-            mSprPalette1[3] = (_value >> 6) & 0b11;
+            mSprPalette1[2] = (_value >> 2) & 0b11;
+            mSprPalette1[1] = (_value >> 4) & 0b11;
             break;
 
         case IOReg::LCDC:
@@ -147,7 +146,7 @@ void PPU::RenderScanline()
 
     int line = mMmu.ReadU8(IOReg::LY);
     int mapX = mMmu.ReadU8(IOReg::SCX);
-    int mapY = (line + mMmu.ReadU8(IOReg::SCY) % 256);
+    int mapY = (256 + (line + mMmu.ReadU8(IOReg::SCY))) % 256;
     int wndX = mMmu.ReadU8(IOReg::WX) - 7;
     int wndY = mMmu.ReadU8(IOReg::WY);
     bool signedTiles = (mBGTileData == Memory::VRamTileData2StartAddr);
@@ -162,7 +161,7 @@ void PPU::RenderScanline()
                 int rx = x - wndX;
                 int tileIdx = (((line - wndY) / 8) * 32) + (rx / 8);
                 u8 tileNum = mMmu.ReadU8(mWindowTileMap + tileIdx);
-                u16 tileAddr = signedTiles ? ((0x9000 + (i8)tileNum * 16)) : (mWindowTileMap + tileNum * 16);
+                u16 tileAddr = signedTiles ? ((0x9000 + (i8)tileNum * 16)) : (mBGTileData + tileNum * 16);
                 int tx = rx % 8;
                 int ty = (line - wndY) % 8;
 
@@ -175,10 +174,10 @@ void PPU::RenderScanline()
             }
             else
             {
-                int rx = (mapX + x) % 256;
+                int rx = (256 + (mapX + x)) % 256;
                 int tileIdx = ((mapY / 8) * 32) + (rx / 8);
                 u8 tileNum = mMmu.ReadU8(mBGTileMap + tileIdx);
-                u16 tileAddr = signedTiles ? ((0x9000 + (i8)tileNum * 16)) : (mBGTileMap + tileNum * 16);
+                u16 tileAddr = signedTiles ? ((0x9000 + (i8)tileNum * 16)) : (mBGTileData + tileNum * 16);
                 int tx = rx % 8;
                 int ty = mapY % 8;
 
@@ -199,10 +198,10 @@ void PPU::RenderScanline()
 
         for (int s = 0; s < 40; ++s)
         {
-            u8 sprPosY = mMmu.ReadU8(addr++) - 16;
-            u8 sprPosX = mMmu.ReadU8(addr++) - 8;
+            int sprPosY = mMmu.ReadU8(addr++) - 16;
+            int sprPosX = mMmu.ReadU8(addr++) - 8;
 
-            if ((sprPosY > line) || ((sprPosY + mObjSize) <= line) || (sprPosX <= 0) || (sprPosX >= Screen::Width))
+            if ((sprPosY > line) || ((sprPosY + mObjSize) <= line) || (sprPosX < -7) || (sprPosX >= Screen::Width))
             {
                 addr += 2;
                 continue;
@@ -212,7 +211,7 @@ void PPU::RenderScanline()
             u8 sprAttr = mMmu.ReadU8(addr++);
             u16 tileAddr = Memory::VRamTileData1StartAddr + (sprTile * 16);
             bool flipY = (sprAttr & (1 << 6)) != 0;
-            int sprLine = flipY ? (mObjSize - 1 - (line - sprPosY)) : (line - sprPosY); // todo: comprobar que funciona el flipY
+            int sprLine = flipY ? (mObjSize - 1 - (line - sprPosY)) : (line - sprPosY);
             tileAddr += sprLine * 2;
 
             u8 b1 = mMmu.ReadU8(tileAddr++);
@@ -224,8 +223,8 @@ void PPU::RenderScanline()
 
             for (int x = 0; x < 8; ++x)
             {
-                if (sprPosX + x >= Screen::Width)
-                    break;
+                if (sprPosX + x >= Screen::Width || (sprPosX + x < 0))
+                    continue;
 
                 int rx = flipX ? (7 - x) : x;
                 u8 cp = (((b1 >> (7 - rx)) & 1) << 1) | ((b2 >> (7 - rx)) & 1);
@@ -257,7 +256,7 @@ void PPU::OnHLine()
     mMmu.WriteU8(IOReg::STAT, stat, false);
 
     if (cline && (stat & (1 << 6)) != 0)
-        mMmu.WriteU8(IOReg::IF, mMmu.ReadU8(IOReg::IF) | (1 << 1));
+        mCpu.RequestInterrupt(Interrupt::LCDCStatus);
 }
 
 //--------------------------------------------
@@ -276,19 +275,19 @@ void PPU::SetMode(int _newMode)
     {
         case HBLANK:
             if ((stat & (1 << 3)) != 0)
-                mMmu.WriteU8(IOReg::IF, mMmu.ReadU8(IOReg::IF) | (1 << 1));
+                mCpu.RequestInterrupt(Interrupt::LCDCStatus);
             break;
 
         case VBLANK:
-            mMmu.WriteU8(IOReg::IF, mMmu.ReadU8(IOReg::IF) | 1);
+            mCpu.RequestInterrupt(Interrupt::VBlank);
 
             if ((stat & (1 << 4)) != 0)
-                mMmu.WriteU8(IOReg::IF, mMmu.ReadU8(IOReg::IF) | (1 << 1));
+                mCpu.RequestInterrupt(Interrupt::LCDCStatus);
             break;
 
         case OAM_VRAM:
             if ((stat & (1 << 5)) != 0)
-                mMmu.WriteU8(IOReg::IF, mMmu.ReadU8(IOReg::IF) | (1 << 1));
+                mCpu.RequestInterrupt(Interrupt::LCDCStatus);
             break;
     }
 }

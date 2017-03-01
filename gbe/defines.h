@@ -101,4 +101,19 @@ namespace IOReg
 namespace Size
 {
     static const int ExternalRam = 1024 * 8;
+    static const int Ram = 1024 * 8;
+    static const int VRam = 1024 * 8;
+    static const int BootRom = 256;
+    static const int IORegisters = 128;
+    static const int HighRam = 127;
+    static const int OAM = 160;
+}
+
+namespace Interrupt
+{
+    static const int VBlank = (1 << 0);
+    static const int LCDCStatus = (1 << 1);
+    static const int TimerOverflow = (1 << 2);
+    static const int SerialTransferCompletation = (1 << 3);
+    static const int HighToLowP10_P13 = (1 << 4);
 }

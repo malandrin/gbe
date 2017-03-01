@@ -18,6 +18,7 @@ typedef short i16;
 typedef int i32;
 typedef unsigned int u32;
 
-string Int2Hex(int _value);
+string Int2Hex      (int _value, int _minLength = 0, bool _addSign = true);
+bool   FileExists   (const string &_filename);    
 
 #endif

@@ -20,6 +20,21 @@ MemoryViewer::MemoryViewer(const MMU &_mmu) : mMmu(_mmu)
 //--------------------------------------------
 void MemoryViewer::Render()
 {
+    if (mShowingBootRom && !mMmu.IsInBootRom())
+        CalculateMemInfo();
+
+    u8 romBank = mMmu.GetRomBank();
+
+    if (romBank != mPrevRomBank)
+    {
+        mMemInfo[mRomBank1Idx] = mRomBanksMemInfo[romBank];
+        mPrevRomBank = romBank;
+
+        for (int i = mRomBank1Idx + 1; i < (int)mMemInfo.size(); ++i)
+            mMemInfo[i].SetLineStart((i == 0) ? 0 : mMemInfo[i - 1].lineEnd);
+    }
+
+    // ...
 	ImGui::SetNextWindowPos(ImVec2(0, 468));
 
 	if (ImGui::Begin("Memory", nullptr, ImVec2(1024, 300), 1.0f, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings))
@@ -89,28 +104,50 @@ void MemoryViewer::CalculateMemInfo()
 {
 	mMemInfo.clear();
 
-	// Bootable rom
-	if (mMmu.IsInBootableRom())
-		mMemInfo.push_back(MemInfo(mMmu.GetBootableRom(), MMU::BootableRomSize, 0, 0, string("BROM")));
+	// Boot rom
+    mShowingBootRom = mMmu.IsInBootRom();
 
-	// cartridge rom
-	mMemInfo.push_back(MemInfo(mMmu.GetRom(), mMmu.GetRomSize(), 0,
-							   mMmu.IsInBootableRom() ? mMemInfo[0].lineEnd : 0, string(" ROM")));
+	if (mShowingBootRom)
+		mMemInfo.push_back(MemInfo(mMmu.GetBootRom(), Size::BootRom, 0, 0, string(" BROM")));
+
+	// cartridge rom (bank 1-n share memory address)
+    int kb16 = 1024 * 16;
+    int numBlocks = (mMmu.GetRomSize() / kb16);
+
+    // bank 0
+    const u8 *rom = mMmu.GetRom();
+    MemInfo bank0(rom, kb16, 0, mShowingBootRom ? mMemInfo[0].lineEnd : 0, string("ROM00"));
+
+    mRomBanksMemInfo.push_back(bank0);
+    mMemInfo.push_back(bank0);
+
+    if (numBlocks > 1)
+    {
+        mRomBank1Idx = (int)mMemInfo.size();
+        MemInfo bank1(rom + kb16, kb16, kb16, mMemInfo[mMemInfo.size() - 1].lineEnd, string("ROM01"));
+
+        mRomBanksMemInfo.push_back(bank1);
+        mMemInfo.push_back(bank1); // bank0 always is visible, in this position will be banks 1-n
+
+        // bank 2-n
+        for (int i = 2; i < numBlocks; ++i)
+            mRomBanksMemInfo.push_back(MemInfo(rom + (kb16 * i), kb16, kb16, bank1.lineStart, string("ROM") + Int2Hex(i, 2, false)));
+    }
 
 	// vram
-	mMemInfo.push_back(MemInfo(mMmu.GetVRam(), MMU::VRamSize, Memory::VRamStartAddr, mMemInfo[mMemInfo.size() - 1].lineEnd, string("VRAM")));
+	mMemInfo.push_back(MemInfo(mMmu.GetVRam(), Size::VRam, Memory::VRamStartAddr, mMemInfo[mMemInfo.size() - 1].lineEnd, string(" VRAM")));
 
 	// ram
-	mMemInfo.push_back(MemInfo(mMmu.GetRam(), MMU::RamSize, Memory::RamStartAddr, mMemInfo[mMemInfo.size() - 1].lineEnd, string(" RAM")));
+	mMemInfo.push_back(MemInfo(mMmu.GetRam(), Size::Ram, Memory::RamStartAddr, mMemInfo[mMemInfo.size() - 1].lineEnd, string("  RAM")));
 
     // OAM
-    mMemInfo.push_back(MemInfo(mMmu.GetOAM(), MMU::OAMSize, Memory::OAMStartAddr, mMemInfo[mMemInfo.size() - 1].lineEnd, string( " OAM")));
+    mMemInfo.push_back(MemInfo(mMmu.GetOAM(), Size::OAM, Memory::OAMStartAddr, mMemInfo[mMemInfo.size() - 1].lineEnd, string( "  OAM")));
 
 	// IO registers
-	mMemInfo.push_back(MemInfo(mMmu.GetIORegisters(), MMU::IORegistersSize, Memory::IORegsStartAddr, mMemInfo[mMemInfo.size() - 1].lineEnd, string("IORG")));
+	mMemInfo.push_back(MemInfo(mMmu.GetIORegisters(), Size::IORegisters, Memory::IORegsStartAddr, mMemInfo[mMemInfo.size() - 1].lineEnd, string(" IORG")));
 
 	// high ram
-	mMemInfo.push_back(MemInfo(mMmu.GetHighRam(), MMU::HighRamSize, Memory::HighRamStartAddr, mMemInfo[mMemInfo.size() - 1].lineEnd, string("HRAM")));
+	mMemInfo.push_back(MemInfo(mMmu.GetHighRam(), Size::HighRam, Memory::HighRamStartAddr, mMemInfo[mMemInfo.size() - 1].lineEnd, string(" HRAM")));
 
 	// ...
 	int numMemInfo = mMemInfo.size() - 1;

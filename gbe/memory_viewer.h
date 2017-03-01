@@ -7,9 +7,9 @@ class MMU;
 class MemoryViewer
 {
 public:
-    MemoryViewer(const MMU &_mmu);
+         MemoryViewer   (const MMU &_mmu);
 
-	void Render();
+	void Render         ();
 
 private:
     static const int mNumCols = 32;
@@ -21,28 +21,50 @@ private:
             mem = _m;
             size = _s;
             baseAddr = _ba;
-            lineStart = _ls;
-            lineEnd = _ls + (int)((_s + mNumCols - 1) / mNumCols);
             memType = _mt;
+
+            SetLineStart(_ls);
         }
 
-        const u8 *mem {nullptr};
-        int size {0};
-        int baseAddr {0};
-        int lineStart {0};
-        int lineEnd {0};
+        void SetLineStart(int _ls)
+        {
+            lineStart = _ls;
+            lineEnd = _ls + (int)((size + mNumCols - 1) / mNumCols);
+        }
+
+        MemInfo& operator = (const MemInfo &_mi)
+        {
+            mem = _mi.mem;
+            size = _mi.size;
+            baseAddr = _mi.baseAddr;
+            lineStart = _mi.lineStart;
+            lineEnd = _mi.lineEnd;
+            memType = _mi.memType;
+
+            return *this;
+        }
+
+        const u8 *mem { nullptr };
+        int size { 0 };
+        int baseAddr { 0 };
+        int lineStart { 0 };
+        int lineEnd { 0 };
         string memType;
     };
 
-    const MMU &mMmu;
-
+    const MMU       &mMmu;
     vector<MemInfo> mMemInfo;
-    int mLineTotalCount {0};
-	int mMemSize{0};
+    vector<MemInfo> mRomBanksMemInfo;
+    int             mLineTotalCount { 0 };
+	int             mMemSize { 0 };
+    bool            mShowingBootRom { false };
+    int             mPrevRomBank { 0 };
+    int             mRomBank1Idx { 0 };
 
-    void    CalculateMemInfo  ();
+    // ...
+    void CalculateMemInfo  ();
 
-    inline int GetMemInfoByLine (int _line)
+    inline int GetMemInfoByLine  (int _line)
     {
 		for (u32 i = 0; i < mMemInfo.size(); ++i)
 		{

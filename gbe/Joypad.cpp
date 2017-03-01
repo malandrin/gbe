@@ -6,7 +6,7 @@
 //--------------------------------------------
 // --
 //--------------------------------------------
-Joypad::Joypad(MMU &_mmu) : mMmu(_mmu)
+Joypad::Joypad(CPU &_cpu, MMU &_mmu) : mCpu(_cpu), mMmu(_mmu)
 {
     _mmu.AddListener(this);
 }
@@ -43,5 +43,5 @@ void Joypad::OnMemoryWrittenU8(u16 _virtAdd, u8 _value)
 void Joypad::OnKeyDown(Key _key)
 {
     mKeyPressed[_key] = true;
-    mMmu.WriteU8(IOReg::IF, mMmu.ReadU8(IOReg::IF) | (1 << 4));
+    mCpu.RequestInterrupt(Interrupt::HighToLowP10_P13);
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "mmu.h"
+#include "cpu.h"
 #include "mmu_listener.h"
 
 class Joypad : public IMmuListener
@@ -24,10 +25,10 @@ public:
         Num
     };
 
-            Joypad    (MMU &_mmu);
+         Joypad    (CPU &_cpu, MMU &_mmu);
 
-    void    OnKeyDown (Key _key);
-    void    OnKeyUp   (Key _key) { mKeyPressed[_key] = false; }
+    void OnKeyDown (Key _key);
+    void OnKeyUp   (Key _key) { mKeyPressed[_key] = false; }
 
     // inherited IMmuListener
     void OnMemoryWrittenU8  (u16 _virtAdd, u8 _value);
@@ -36,5 +37,6 @@ public:
 private:
 
     bool mKeyPressed[Key::Num] {false};
-    MMU& mMmu;
+    MMU &mMmu;
+    CPU &mCpu;
 };

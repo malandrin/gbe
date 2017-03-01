@@ -6,7 +6,7 @@
 //--------------------------------------------
 // --
 //--------------------------------------------
-Timer::Timer(MMU &_mmu) : mMmu(_mmu)
+Timer::Timer(CPU &_cpu, MMU &_mmu) : mCpu(_cpu), mMmu(_mmu)
 {
     _mmu.AddListener(this);
 }
@@ -36,7 +36,7 @@ void Timer::Update(u8 _numCycles)
 
             if (value > 255)
             {
-                mMmu.WriteU8(IOReg::IF, mMmu.ReadU8(IOReg::IF) | (1 << 2));
+                mCpu.RequestInterrupt(Interrupt::TimerOverflow);
                 value = mMmu.ReadU8(IOReg::TAC);
             }
 
@@ -69,3 +69,14 @@ void Timer::OnMemoryWrittenU8(u16 _virtAddr, u8 _value)
     }
 }
 
+
+//--------------------------------------------
+// --
+//--------------------------------------------
+void Timer::Reset()
+{
+    mDivTimer = 0;
+    mTimaTimer = 0;
+    mTimerEnabled = true;
+    mTimerFreq = 0;
+}

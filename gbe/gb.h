@@ -14,9 +14,9 @@ class GB
 {
 public:
 
-                GB              () : mCpu(mMmu, mTimer), mPpu(mCpu, mMmu), mJoypad(mMmu), mTimer(mMmu) {}
+                GB              () : mCpu(mMmu, mTimer), mPpu(mCpu, mMmu), mJoypad(mCpu, mMmu), mTimer(mCpu, mMmu) {}
 
-    void        PowerUp         (Cartridge *_cartridge);
+    void        PowerUp         (Cartridge *_cartridge, bool _runBootRom);
     int         Step            ();
 
     const MMU&  GetMmu          () const { return mMmu; }
@@ -26,12 +26,12 @@ public:
     Cartridge*  GetCartridge    () { return mCartridge; }
 
 private:
-	MMU     mMmu;
-    CPU     mCpu;
-    PPU     mPpu;
-    Joypad  mJoypad;
-    Timer   mTimer;
-    Cartridge *mCartridge { nullptr };
+	MMU         mMmu;
+    CPU         mCpu;
+    PPU         mPpu;
+    Joypad      mJoypad;
+    Timer       mTimer;
+    Cartridge  *mCartridge { nullptr };
 };
 
 #endif

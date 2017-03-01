@@ -177,6 +177,7 @@
   <ItemGroup>
     <ClInclude Include="..\3rdparty\imgui\imgui.h" />
     <ClInclude Include="base.h" />
+    <ClInclude Include="boot_rom.h" />
     <ClInclude Include="cartridge.h" />
     <ClInclude Include="cpu.h" />
     <ClInclude Include="cpu_runnable.h" />

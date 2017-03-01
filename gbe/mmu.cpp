@@ -3,6 +3,7 @@
 #include <memory.h>
 #include "base.h"
 #include "defines.h"
+#include "boot_rom.h"
 #include "mmu.h"
 
 //--------------------------------------------
@@ -10,12 +11,11 @@
 //--------------------------------------------
 MMU::MMU()
 {
-    fill_n(mRam, RamSize, 0);
-    fill_n(mVRam, VRamSize, 0);
-    fill_n(mBootableRom, BootableRomSize, 0);
-    fill_n(mIORegisters, IORegistersSize, 0);
-    fill_n(mHighRam, HighRamSize, 0);
-    fill_n(mOAM, OAMSize, 0);
+    fill_n(mRam, Size::Ram, 0);
+    fill_n(mVRam, Size::VRam, 0);
+    fill_n(mIORegisters, Size::IORegisters, 0);
+    fill_n(mHighRam, Size::HighRam, 0);
+    fill_n(mOAM, Size::OAM, 0);
 
     mDummyListener = new MMUDummyListener();
     mListeners[0] = mDummyListener;
@@ -45,23 +45,6 @@ void MMU::AddListener(IMmuListener* _listener)
     else
         mListeners[2] = _listener;
 }
-
-/*
-//--------------------------------------------
-// --
-//--------------------------------------------
-bool MMU::LoadRoms(const string &_cartridge, const string &_bootRom )
-{
-    if (_bootRom != "")
-    {
-        ifstream bootable(_bootRom, ios::binary);
-        bootable.read((char*)mBootableRom, 256);
-        bootable.close();
-    }
-
-	return true;
-}
-*/
 
 //--------------------------------------------
 // --
@@ -100,7 +83,7 @@ void MMU::SetStateAfterBoot()
     WriteU8(0xFF4B, 0x00);
     WriteU8(0xFFFF, 0x00);
 
-    mBootableRomEnabled = false;
+    mBootRomEnabled = false;
 }
 
 //--------------------------------------------
@@ -108,8 +91,8 @@ void MMU::SetStateAfterBoot()
 //--------------------------------------------
 u8* MMU::VirtAddrToPhysAddr(u16 _virtAddr) const
 {
-    if (mBootableRomEnabled && (_virtAddr >= Memory::BootRomStartAddr) && (_virtAddr <= Memory::BootRomEndAddr))
-        return (u8*)&mBootableRom[_virtAddr];
+    if (mBootRomEnabled && (_virtAddr >= Memory::BootRomStartAddr) && (_virtAddr <= Memory::BootRomEndAddr))
+        return (u8*)&BootROM[_virtAddr];
 
     if ((_virtAddr >= Memory::RomStartAddr) && (_virtAddr <= Memory::RomEndAddr))
         return mCartridge->GetRom(_virtAddr);
@@ -125,7 +108,7 @@ u8* MMU::VirtAddrToPhysAddr(u16 _virtAddr) const
         return (u8*)&mRam[_virtAddr - Memory::RamStartAddr];
 
     if ((_virtAddr >= Memory::ExternalRamStartAddr) && (_virtAddr <= Memory::ExternalRamEndAddr))
-        return (u8*)&mCartridge->GetRam()[_virtAddr - Memory::ExternalRamStartAddr];
+        return mCartridge->GetRam(_virtAddr);
 
     if ((_virtAddr >= Memory::OAMStartAddr) && (_virtAddr <= Memory::OAMEndAddr))
         return (u8*)&mOAM[_virtAddr - Memory::OAMStartAddr];
@@ -143,7 +126,8 @@ u8* MMU::VirtAddrToPhysAddr(u16 _virtAddr) const
     if (_virtAddr >= 0xF000 && _virtAddr <= 0xFDFF)
         return (u8*)&mRam[_virtAddr - Memory::RamStartAddr];
 
-    throw runtime_error("memory address unknown: " + Int2Hex(_virtAddr));
+    cout << "memory address unknown: " << Int2Hex(_virtAddr);
+    return 0;
 }
 
 //--------------------------------------------
@@ -173,6 +157,9 @@ void MMU::CopyMem(u16 _startAddr, u16 _destAddr, u16 _size)
 //--------------------------------------------
 void MMU::WriteU8(u16 _virtAddr, u8 _value, bool _warnLinesteners)
 {
+    if ((_virtAddr >= Memory::ExternalRamStartAddr) && (_virtAddr <= Memory::ExternalRamEndAddr))
+        int a = 0;
+
     // MBC
     if (!mCartridge->WriteU8(_virtAddr, _value))
     {
@@ -188,4 +175,12 @@ void MMU::WriteU8(u16 _virtAddr, u8 _value, bool _warnLinesteners)
             }
         }
     }
+}
+
+//--------------------------------------------
+// --
+//--------------------------------------------
+const u8 *MMU::GetBootRom() const
+{
+    return BootROM;
 }

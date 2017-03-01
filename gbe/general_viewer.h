@@ -8,17 +8,17 @@ class GeneralViewer
 {
 public:
 
-	GeneralViewer(const CPU &_cpu, const MMU &_mmu);
+	        GeneralViewer   (const CPU &_cpu, const MMU &_mmu);
 
-	void Render();
+	void    Render          ();
 
 private:
 
 	const CPU &mCpu;
     const MMU &mMmu;
 
-    void RenderRegistersWnd();
-    void RenderStackWnd();
+    void RenderRegistersWnd ();
+    void RenderStackWnd     ();
 };
 
 #endif

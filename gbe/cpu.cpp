@@ -7,6 +7,10 @@
 
 #include "cpu.h"
 
+static u16 sInterrupAddresses[] = { Memory::VBlankInterruptAddr, Memory::LCDCStatusInterrupAddr, Memory::TimerOverflowInterrupAddr,
+                                    Memory::SerialTransferInterrupAddr, Memory::HiLoP10P13InterrupAddr };
+
+
 //--------------------------------------------
 // --
 //--------------------------------------------
@@ -47,17 +51,7 @@ void CPU::SetStateAfterBoot()
 //--------------------------------------------
 int CPU::Step()
 {
-    try
-    {
-        return InternalStep();
-    }
-    catch(runtime_error &e)
-    {
-        cout << e.what() << '\n';
-        exit(-1);
-    }
-
-    return -1;
+    return InternalStep();
 }
 
 //--------------------------------------------
@@ -1507,6 +1501,13 @@ int CPU::InternalStep()
 
     mTimer.Update(numCycles);
 
+    if (mMmu.IsInBootRom() && (mRegPC >= 0x100))
+    {
+        mMmu.SetStateAfterBoot();
+        SetStateAfterBoot();
+        mTimer.Reset();
+    }
+
     // manage interrupts
     if (mIME)
     {
@@ -1515,12 +1516,10 @@ int CPU::InternalStep()
         if (iflags > 0)
         {
             u8 ienable = mMmu.ReadU8(IOReg::IE);
-            u16 addresses[] = { Memory::VBlankInterruptAddr, Memory::LCDCStatusInterrupAddr, Memory::TimerOverflowInterrupAddr,
-                Memory::SerialTransferInterrupAddr, Memory::HiLoP10P13InterrupAddr };
 
             for (int i = 0; i < 5; ++i)
             {
-                if (ManageInterrupt(i, addresses[i], iflags, ienable))
+                if (ManageInterrupt(i, sInterrupAddresses[i], iflags, ienable))
                 {
                     numCycles += 24;
                     mHalted = false;
@@ -2713,7 +2712,7 @@ int CPU::ProcessCb(u8 _opcode)
             break;
 
         default:
-            throw runtime_error("CB opcode unknown: " + Int2Hex(_opcode));
+            cout << "opcode unknown: " << Int2Hex(_opcode) << endl;
             break;
     }
 
@@ -2737,4 +2736,12 @@ u16 CPU::Pop()
     u16 val = mMmu.ReadU16(mRegSP);
     mRegSP += 2;
     return val;
+}
+
+//--------------------------------------------
+// --
+//--------------------------------------------
+void CPU::RequestInterrupt(int _interrupt)
+{
+    mMmu.WriteU8(IOReg::IF, mMmu.ReadU8(IOReg::IF) | _interrupt);
 }
