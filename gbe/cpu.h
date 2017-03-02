@@ -98,7 +98,6 @@ private:
 
     // ...
     int  ProcessCb          (u8 _opcode);
-	int  InternalStep       ();
 
 	void IncReg             (u8 &_reg);
 	void DecReg             (u8 &_reg);
