@@ -12,7 +12,7 @@ To build the emulator, download the code and open the project with Visual Studio
 # Screenshots
 ![Debugger](http://cesarbotana.com/images/gb-debugger.png)
 
-(Debugger showing the tiles)
+(Debugger showing tileset)
 
 
 ![Games](http://cesarbotana.com/images/gb-games.png)
